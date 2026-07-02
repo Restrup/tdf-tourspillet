@@ -1,0 +1,1528 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tourspillet-Agenten 2026</title>
+<style>
+  :root{
+    --maillot:#f4c20d;        /* gul trøje */
+    --maillot-deep:#e0a800;
+    --ink:#16140d;            /* næsten-sort, varm */
+    --ink-soft:#211e15;
+    --card:#1c1a12;
+    --line:#34301f;
+    --paper:#f3efe2;
+    --paper-dim:#b8b29a;
+    --pois:#d4453a;           /* prikket trøje rød */
+    --green:#3fa34d;          /* grøn trøje */
+    --white:#eceadd;
+    --mut:#8a856f;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    background:var(--ink);
+    color:var(--white);
+    font-family:'Helvetica Neue',Arial,sans-serif;
+    line-height:1.45;
+    padding:0 0 80px;
+    overflow-x:hidden;
+  }
+  .wrap{max-width:760px;margin:0 auto;padding:0 16px}
+
+  /* ---- Header ---- */
+  header{
+    background:
+      repeating-linear-gradient(90deg,var(--ink) 0 28px,var(--ink-soft) 28px 56px);
+    border-bottom:3px solid var(--maillot);
+    padding:22px 0 18px;
+    position:relative;
+  }
+  .eyebrow{
+    font-size:11px;letter-spacing:.32em;text-transform:uppercase;
+    color:var(--maillot);font-weight:700;
+  }
+  h1{
+    font-family:Georgia,'Times New Roman',serif;
+    font-size:clamp(28px,7vw,44px);
+    font-weight:800;line-height:.98;letter-spacing:-.5px;
+    margin:4px 0 2px;color:var(--paper);
+  }
+  h1 .accent{color:var(--maillot)}
+  .sub{font-size:13px;color:var(--paper-dim)}
+
+  /* ---- Stage hero ---- */
+  .hero{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-left:5px solid var(--maillot);
+    border-radius:4px;
+    margin-top:18px;padding:18px 18px 16px;
+  }
+  .hero .top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+  .stage-no{
+    font-family:Georgia,serif;font-size:13px;color:var(--maillot);
+    letter-spacing:.1em;text-transform:uppercase;font-weight:700;
+  }
+  .stage-route{font-family:Georgia,serif;font-size:22px;color:var(--paper);font-weight:700;margin-top:2px;line-height:1.1}
+  .stage-meta{font-size:12.5px;color:var(--mut);margin-top:4px}
+  .badge{
+    font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+    padding:6px 11px;border-radius:30px;white-space:nowrap;
+  }
+  .b-flad{background:#2b3a44;color:#9fd4ef}
+  .b-bakket{background:#3a3320;color:#f0c560}
+  .b-bjerg{background:#3c241f;color:#f0998c}
+  .b-tt{background:#2c2438;color:#c9aef0}
+
+  .verdict{
+    margin-top:14px;padding:12px 14px;background:var(--ink-soft);
+    border-radius:4px;font-size:14px;color:var(--paper);
+  }
+  .verdict b{color:var(--maillot)}
+
+  /* ---- nav arrows ---- */
+  .stage-nav{display:flex;gap:8px;margin-top:14px;align-items:center}
+  .stage-nav button{
+    background:var(--ink-soft);color:var(--paper);border:1px solid var(--line);
+    border-radius:4px;padding:8px 12px;font-size:13px;font-weight:600;cursor:pointer;
+    transition:.15s;
+  }
+  .stage-nav button:hover:not(:disabled){background:var(--maillot);color:var(--ink);border-color:var(--maillot)}
+  .stage-nav button:disabled{opacity:.35;cursor:not-allowed}
+  .stage-nav .spacer{flex:1}
+  .stage-nav .live{font-size:11px;color:var(--mut);letter-spacing:.05em}
+
+  /* ---- section heads ---- */
+  .sec-head{
+    display:flex;align-items:baseline;gap:10px;margin:30px 0 12px;
+  }
+  .sec-head .n{font-family:Georgia,serif;color:var(--maillot);font-size:13px;font-weight:700}
+  .sec-head h2{font-family:Georgia,serif;font-size:20px;color:var(--paper);font-weight:700;letter-spacing:-.2px}
+  .sec-head .line{flex:1;height:1px;background:var(--line)}
+
+  /* ---- recommendation cards ---- */
+  .rider{
+    background:var(--card);border:1px solid var(--line);border-radius:4px;
+    padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;
+    position:relative;
+  }
+  .rider .rank{
+    font-family:Georgia,serif;font-size:20px;font-weight:800;color:var(--maillot);
+    width:26px;text-align:center;flex-shrink:0;
+  }
+  .rider .body{flex:1;min-width:0}
+  .rider .nm{font-size:15px;font-weight:700;color:var(--paper)}
+  .rider .tm{font-size:11.5px;color:var(--mut);margin-top:1px}
+  .rider .why{font-size:12.5px;color:var(--paper-dim);margin-top:5px;line-height:1.35}
+  .rider .right{text-align:right;flex-shrink:0}
+  .rider .val{font-size:14px;font-weight:700;color:var(--white);white-space:nowrap}
+  .rider .ev{font-size:11px;font-weight:700;margin-top:2px;white-space:nowrap}
+  .ev.hi{color:var(--green)}.ev.mid{color:var(--maillot)}.ev.lo{color:var(--mut)}
+  .cap-tag{
+    position:absolute;top:-7px;left:8px;background:var(--pois);color:#fff;
+    font-size:9px;font-weight:800;letter-spacing:.08em;padding:2px 7px;border-radius:20px;text-transform:uppercase;
+  }
+  .fav-star{color:var(--pois);font-size:13px;margin-left:5px;vertical-align:middle}
+  .pop-tag{font-size:10px;color:var(--mut);margin-top:2px;white-space:nowrap}
+  .ppop{font-size:11px;color:var(--mut);width:44px;text-align:right;flex-shrink:0}
+  .winnote{font-size:12px;color:var(--paper-dim);margin-bottom:10px;padding:8px 10px;background:var(--ink-soft);border-radius:4px;border-left:3px solid var(--maillot)}
+  .winnote b{color:var(--maillot)}
+
+  /* sæsonplan */
+  .plan-sum{font-size:13px;color:var(--paper-dim);background:var(--card);border:1px solid var(--line);border-radius:4px;padding:11px 14px;margin-bottom:12px}
+  .plan-sum b{color:var(--maillot);font-size:15px}
+  .pstage{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:11px 13px;margin-bottom:7px}
+  .pstage.start{border-left:5px solid var(--maillot)}
+  .pstage.nochange{opacity:.62}
+  .pstage-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .pno{font-size:12.5px;font-weight:700;color:var(--paper);font-family:Georgia,serif}
+  .pbadge{font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:3px 9px;border-radius:20px;white-space:nowrap}
+  .pstart-label{font-size:11px;color:var(--maillot);text-transform:uppercase;letter-spacing:.06em;font-weight:700;margin:9px 0 6px}
+  .pstart-grid{display:flex;flex-wrap:wrap;gap:5px}
+  .pchip{font-size:11.5px;background:var(--ink-soft);border:1px solid var(--line);border-radius:4px;padding:4px 8px;color:var(--paper-dim);display:flex;gap:6px;align-items:center}
+  .pchip.cap{border-color:var(--pois);color:var(--paper)}
+  .pchv{color:var(--mut);font-size:10px}
+  .pmoves{margin-top:8px;display:flex;flex-direction:column;gap:5px}
+  .pmove{display:flex;align-items:center;gap:8px;font-size:12.5px;flex-wrap:wrap}
+  .pm-out{color:#ef9a8c}
+  .pm-arrow{color:var(--mut)}
+  .pm-in{color:#7fd0a0;flex:1}
+  .pm-net{color:var(--green);font-weight:700;font-size:11.5px}
+  .pnochange{margin-top:7px;font-size:12.5px;color:var(--green)}
+  .pcap{margin-top:8px;padding-top:7px;border-top:1px solid var(--line);font-size:12px;color:var(--paper-dim)}
+  .pcap b{color:var(--paper)}
+  .role-pill{
+    display:inline-block;font-size:9.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;
+    padding:1px 6px;border-radius:3px;margin-left:6px;vertical-align:middle;
+  }
+  .r-sprint{background:#23323b;color:#86c7e8}
+  .r-klatrer{background:#3a221d;color:#ef9a8c}
+  .r-puncheur{background:#33301c;color:#e8c558}
+  .r-gc{background:#2d2738;color:#bfa3e6}
+  .r-tt{background:#1f3329;color:#7fd0a0}
+  .r-rouleur{background:#2f2b22;color:#cbbf95}
+
+  /* ---- my team builder ---- */
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:16px}
+  .muted{color:var(--mut);font-size:13px}
+  .budget-bar{height:9px;background:var(--ink-soft);border-radius:6px;overflow:hidden;margin:8px 0 4px}
+  .budget-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--maillot));transition:.3s}
+  .budget-fill.over{background:var(--pois)}
+  .picker{max-height:340px;overflow-y:auto;margin-top:8px;border-top:1px solid var(--line)}
+  .prow{
+    display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid var(--line);
+    cursor:pointer;font-size:13.5px;
+  }
+  .prow:hover{background:var(--ink-soft)}
+  .prow.sel{background:#2a2715}
+  .prow .chk{width:18px;height:18px;border:1.5px solid var(--mut);border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px}
+  .prow.sel .chk{background:var(--maillot);border-color:var(--maillot);color:var(--ink)}
+  .prow .pn{flex:1}.prow .pt{color:var(--mut);font-size:11px}
+  .prow .pv{font-weight:700;font-size:13px}
+  .prow.dis{opacity:.4;cursor:not-allowed}
+  .btn{
+    background:var(--maillot);color:var(--ink);border:none;border-radius:4px;
+    padding:11px 16px;font-size:14px;font-weight:800;cursor:pointer;letter-spacing:.02em;
+    transition:.15s;width:100%;margin-top:12px;
+  }
+  .btn:hover{background:var(--maillot-deep)}
+  .btn.ghost{background:transparent;color:var(--paper-dim);border:1px solid var(--line)}
+  .btn.ghost:hover{background:var(--ink-soft);color:var(--paper)}
+
+  .squad-line{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--line)}
+  .squad-line .nm{color:var(--paper)}
+  .squad-line.cap .nm::after{content:' ©';color:var(--pois);font-weight:800}
+  .squad-line .v{color:var(--mut)}
+
+  .note{font-size:12px;color:var(--mut);margin-top:10px;line-height:1.5}
+
+  /* vindue / slider */
+  .winbox{margin-top:14px;padding:12px 14px;background:var(--ink-soft);border-radius:4px;border:1px solid var(--line)}
+  .slider{-webkit-appearance:none;appearance:none;width:100%;height:5px;border-radius:5px;background:var(--line);outline:none;margin:10px 0 8px}
+  .slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:20px;height:20px;border-radius:50%;background:var(--maillot);cursor:pointer;border:3px solid var(--ink)}
+  .slider::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--maillot);cursor:pointer;border:3px solid var(--ink)}
+  .winstages{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}
+  .winstages .ws{font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:20px;background:var(--card);border:1px solid var(--line);color:var(--paper-dim)}
+  .winstages .ws .wt{margin-left:5px;opacity:.7}
+
+  /* skift-kort */
+  .hold-good{background:#1f2e1f;border:1px solid #2f4a2f;color:#a9d9a9;border-radius:4px;padding:12px 14px;font-size:13.5px;line-height:1.5}
+  .hold-warn{background:#332417;border:1px solid #5a3f1f;color:#e8b878;border-radius:4px;padding:12px 14px;font-size:13.5px;line-height:1.5}
+  .move{background:var(--ink-soft);border:1px solid var(--line);border-radius:4px;padding:10px 12px;margin-bottom:8px}
+  .move-out,.move-in{display:flex;align-items:center;gap:8px;font-size:13.5px}
+  .move-arrow{text-align:center;color:var(--mut);font-size:13px;margin:2px 0}
+  .tag-out{font-size:9px;font-weight:800;letter-spacing:.06em;background:#3c241f;color:#f0998c;padding:2px 6px;border-radius:3px}
+  .tag-in{font-size:9px;font-weight:800;letter-spacing:.06em;background:#1f3329;color:#7fd0a0;padding:2px 6px;border-radius:3px}
+  .move .mn{flex:1;color:var(--paper);font-weight:600}
+  .move .mwg{color:var(--mut);font-size:12px}
+  .move-net{font-size:11.5px;color:var(--paper-dim);margin-top:6px;padding-top:6px;border-top:1px solid var(--line)}
+  .move-net b{color:var(--green)}
+  .tabs{display:flex;gap:4px;margin:24px 0 0;border-bottom:2px solid var(--line)}
+  .tab{
+    padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;color:var(--mut);
+    border-bottom:2px solid transparent;margin-bottom:-2px;
+  }
+  .tab.active{color:var(--maillot);border-bottom-color:var(--maillot)}
+  .tabview{display:none}
+  .tabview.active{display:block}
+  details{background:var(--card);border:1px solid var(--line);border-radius:4px;margin-bottom:8px}
+  summary{padding:12px 14px;cursor:pointer;font-weight:700;font-size:14px;color:var(--paper);list-style:none}
+  summary::-webkit-details-marker{display:none}
+  summary::before{content:'+ ';color:var(--maillot);font-weight:800}
+  details[open] summary::before{content:'– '}
+  .det-body{padding:0 14px 14px;font-size:13px;color:var(--paper-dim);line-height:1.5}
+  .det-body table{width:100%;border-collapse:collapse;margin-top:6px;font-size:12.5px}
+  .det-body td{padding:3px 0;border-bottom:1px solid var(--line)}
+  .det-body td:last-child{text-align:right;color:var(--white);font-weight:600}
+  footer{text-align:center;font-size:11px;color:var(--mut);margin-top:40px;padding-top:20px;border-top:1px solid var(--line)}
+
+  /* rytter-profil */
+  .rsel{width:100%;background:var(--card);color:var(--paper);border:1px solid var(--line);border-radius:4px;padding:11px 12px;font-size:14px;margin-bottom:6px}
+  .rprofile{margin-top:8px}
+  .rhead{display:flex;justify-content:space-between;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-left:5px solid var(--maillot);border-radius:4px;padding:14px 16px;gap:12px}
+  .rname{font-family:Georgia,serif;font-size:22px;font-weight:700;color:var(--paper)}
+  .rteam{font-size:12.5px;color:var(--mut);margin-top:2px}
+  .rroles{font-size:11px;color:var(--maillot);margin-top:6px;letter-spacing:.03em;text-transform:uppercase;font-weight:700}
+  .rval{text-align:right;flex-shrink:0}
+  .rvnum{font-size:18px;font-weight:800;color:var(--white)}
+  .rvlbl{font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.08em}
+  .chart-head{display:flex;justify-content:space-between;align-items:baseline;margin:22px 0 4px}
+  .chart-head h3{font-family:Georgia,serif;font-size:15px;color:var(--paper);font-weight:700}
+  .est-tag{font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.08em;font-weight:700}
+  .chart{width:100%;height:auto;background:var(--card);border:1px solid var(--line);border-radius:4px;display:block;margin-top:4px}
+  .chart .ax{fill:var(--mut);font-size:10px;font-family:Arial}
+  .chart .grid{stroke:var(--line);stroke-width:1}
+  .legend{display:flex;flex-wrap:wrap;gap:12px;margin:8px 0 2px}
+  .legend .lg{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--paper-dim)}
+  .legend .sw{width:11px;height:11px;border-radius:2px;display:inline-block}
+  /* PCS-panel */
+  .pcs-panel{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:14px 16px;margin-top:4px}
+  .pcs-row{display:flex;align-items:center;gap:10px;margin-bottom:7px}
+  .pcs-lbl{width:86px;font-size:12px;color:var(--paper-dim);flex-shrink:0}
+  .pcs-track{flex:1;height:9px;background:var(--ink-soft);border-radius:6px;overflow:hidden}
+  .pcs-fill{display:block;height:100%;border-radius:6px;transition:.4s}
+  .pcs-val{width:64px;text-align:right;font-size:11.5px;color:var(--mut);flex-shrink:0}
+  .pcs-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+  .chip{font-size:11.5px;background:var(--ink-soft);border:1px solid var(--line);border-radius:20px;padding:4px 11px;color:var(--paper-dim)}
+  .chip b{color:var(--maillot)}
+  .pcs-note{font-size:11px;color:var(--mut);margin-top:11px;line-height:1.45}
+  .form-badge{font-size:10.5px;font-weight:800;letter-spacing:.03em;padding:4px 10px;border-radius:20px;text-transform:uppercase}
+  .form-badge.hot{background:#3a2418;color:#f0a26a}
+  .form-badge.ok{background:#26301f;color:#a9d9a9}
+  .form-badge.cold{background:#232b33;color:#8fb6cf}
+  .pcs-empty{background:var(--card);border:1px dashed var(--line);border-radius:4px;padding:14px 16px;font-size:12.5px;color:var(--mut);margin-top:14px;line-height:1.5}
+  .pcs-empty b{color:var(--maillot)}
+  .pcs-import{margin-bottom:10px}
+  .pcs-ta{width:100%;min-height:80px;background:var(--ink-soft);color:var(--paper);border:1px solid var(--line);border-radius:4px;padding:9px;font-size:11px;font-family:monospace}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="eyebrow">Holdet.dk · Tourspillet</div>
+    <h1>Tourspillet-<span class="accent">Agenten</span></h1>
+    <div class="sub">Dagligt holdoplæg · Tour de France 4.–26. juli 2026 · 50 mio. · 8 ryttere</div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- STAGE HERO -->
+  <div class="hero" id="hero"></div>
+  <div class="stage-nav">
+    <button id="prevBtn">‹ Forrige</button>
+    <button id="nextBtn">Næste ›</button>
+    <span class="spacer"></span>
+    <span class="live" id="liveTag"></span>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <div class="tab active" data-tab="rec">Dagens oplæg</div>
+    <div class="tab" data-tab="team">Mit hold</div>
+    <div class="tab" data-tab="plan">Sæsonplan</div>
+    <div class="tab" data-tab="rider">Rytter-profil</div>
+    <div class="tab" data-tab="rules">Pointsystem</div>
+  </div>
+
+  <!-- TAB: RECOMMENDATION -->
+  <div class="tabview active" id="tab-rec">
+    <div class="sec-head"><span class="n">A</span><h2>Bedste køb over vinduet</h2><span class="line"></span></div>
+    <div id="recWinNote" class="winnote"></div>
+    <div id="recList"></div>
+    <div class="sec-head"><span class="n">B</span><h2>Kaptajn-valg</h2><span class="line"></span></div>
+    <div id="capBox"></div>
+    <p class="note" id="recNote"></p>
+  </div>
+
+  <!-- TAB: MY TEAM -->
+  <div class="tabview" id="tab-team">
+    <div class="sec-head"><span class="n">·</span><h2>Byg dit hold</h2><span class="line"></span></div>
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:baseline">
+        <span class="muted">Budget brugt</span>
+        <span id="budgetTxt" style="font-weight:700">0 / 50.000.000</span>
+      </div>
+      <div class="budget-bar"><div class="budget-fill" id="budgetFill" style="width:0%"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--mut)">
+        <span id="countTxt">0 / 8 ryttere valgt</span>
+        <span id="leftTxt">50.000.000 tilbage</span>
+      </div>
+      <div class="picker" id="picker"></div>
+
+      <div class="winbox">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span class="muted">Planlæg over de næste</span>
+          <span id="winTxt" style="font-weight:700;color:var(--maillot)">4 etaper</span>
+        </div>
+        <input type="range" id="winSlider" min="1" max="8" value="4" class="slider">
+        <div class="winstages" id="winStages"></div>
+        <div class="note" style="margin-top:6px">Nærmeste etape vejer tungest. Stort vindue = stabil kerne. <b style="color:var(--maillot)">Sæt til 1</b> for at optimere holdet <b>kun</b> til næste etape (specialist-tilstand — fx rene tempo-ryttere til enkeltstarten).</div>
+      </div>
+
+      <button class="btn" id="optBtn">Foreslå optimalt hold / skift</button>
+      <button class="btn ghost" id="clearBtn">Ryd hold</button>
+      <p class="note">Vælg max 2 ryttere fra samme hold. Sæt kaptajn med stjernen i holdlisten. Efter etape 1 koster hver handel 1% af den købte rytters værdi.</p>
+    </div>
+
+    <div class="sec-head"><span class="n">·</span><h2>Anbefalede skift</h2><span class="line"></span></div>
+    <div class="panel" id="transferBox"><p class="muted">Byg et hold og tryk "Foreslå optimalt hold / skift".</p></div>
+
+    <div class="sec-head"><span class="n">·</span><h2>Dit hold</h2><span class="line"></span></div>
+    <div class="panel" id="squadBox"><p class="muted">Ingen ryttere valgt endnu.</p></div>
+  </div>
+
+  <!-- TAB: SEASON PLAN -->
+  <div class="tabview" id="tab-plan">
+    <div class="sec-head"><span class="n">·</span><h2>Rullende plan · alle 21 etaper</h2><span class="line"></span></div>
+    <div class="panel" style="margin-bottom:14px">
+      <p class="muted" style="margin:0 0 8px">Fuld skitse nu. Holdet rulles fra etape 1 og skifter kun hvor det betaler sig over vinduet. Planen strammes op efter hver etapes resultater.</p>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+        <span class="muted">Max skift pr. etape</span>
+        <span id="maxMovesTxt" style="font-weight:700;color:var(--maillot)">3</span>
+      </div>
+      <input type="range" id="maxMovesSlider" min="1" max="8" value="3" class="slider">
+      <p class="note" style="margin-top:4px">Lavt tal = behold kernen, færre gebyrer. Højt tal = jagter hver etape aggressivt.</p>
+      <button class="btn" id="buildPlanBtn">Byg / opdatér sæsonplan</button>
+    </div>
+    <div id="planList"></div>
+  </div>
+
+  <!-- TAB: RIDER PROFILE -->
+  <div class="tabview" id="tab-rider">
+    <div class="sec-head"><span class="n">·</span><h2>Vælg rytter</h2><span class="line"></span></div>
+    <select id="riderSelect" class="rsel"></select>
+    <details class="pcs-import">
+      <summary>Indlæs / opdatér ProCyclingStats-data</summary>
+      <div class="det-body">
+        <p style="margin-bottom:8px">Kør <b>fetch_pcs.py</b> i Claude Code (henter specialty-points, form og sæsonstatistik for alle 184 ryttere), åbn <b>pcs_specialties.json</b> og indsæt indholdet her:</p>
+        <textarea id="pcsPaste" class="pcs-ta" placeholder='{"Tadej Pogačar": {"sprint": 360, "climber": 10122, ...}, ...}'></textarea>
+        <button class="btn" id="pcsImportBtn">Indlæs PCS-data</button>
+        <p class="note" id="pcsStatus"></p>
+      </div>
+    </details>
+    <div id="riderProfile"></div>
+  </div>
+
+  <!-- TAB: RULES -->
+  <div class="tabview" id="tab-rules">
+    <div class="sec-head"><span class="n">·</span><h2>Sådan tjener ryttere værdi</h2><span class="line"></span></div>
+    <div id="rulesBox"></div>
+  </div>
+
+  <footer>
+    Bygget til Christian · Værdier og pointsystem fra holdet.dk (Tourspillet 2026).<br>
+    Agenten estimerer <b>forventet vækst</b> — den kan ikke forudsige resultater. Efter hver etape: opdatér rytterværdierne med et nyt screenshot.
+  </footer>
+</div>
+
+<script>
+/* ============================================================
+   DATA: RYTTERE  (værdier fra screenshots, kr.)
+   role: sprint | klatrer | puncheur | gc | tt | rouleur
+   ============================================================ */
+const RIDERS = [
+  {n:"Tadej Pogačar", t:"UAE Team Emirates - XRG", v:17000000, pop:57.2, role:"gc", sub:["klatrer","puncheur"]},
+  {n:"Jonas Vingegaard", t:"Team Visma | Lease a Bike", v:14000000, pop:39.8, role:"gc", sub:["klatrer","tt"]},
+  {n:"Tim Merlier", t:"Soudal Quick-Step", v:12500000, pop:2.4, role:"sprint", sub:[]},
+  {n:"Jasper Philipsen", t:"Alpecin-Premier Tech", v:11500000, pop:5.7, role:"sprint", sub:[]},
+  {n:"Paul Seixas", t:"Decathlon CMA CGM Team", v:11500000, pop:7.1, role:"gc", sub:["puncheur","klatrer"]},
+  {n:"Mathieu van der Poel", t:"Alpecin-Premier Tech", v:11000000, pop:5.7, role:"puncheur", sub:["sprint"]},
+  {n:"Olav Kooij", t:"Decathlon CMA CGM Team", v:10500000, pop:1.0, role:"sprint", sub:[]},
+  {n:"Remco Evenepoel", t:"Red Bull - BORA - hansgrohe", v:10500000, pop:13.0, role:"gc", sub:["tt","puncheur"]},
+  {n:"Florian Lipowitz", t:"Red Bull - BORA - hansgrohe", v:9500000, pop:6.1, role:"gc", sub:["klatrer"]},
+  {n:"Isaac Del Toro", t:"UAE Team Emirates - XRG", v:9500000, pop:11.7, role:"puncheur", sub:["gc","klatrer"]},
+  {n:"Mads Pedersen", t:"Lidl - Trek", v:9500000, pop:19.3, role:"sprint", sub:["puncheur"]},
+  {n:"Juan Ayuso", t:"Lidl - Trek", v:9000000, pop:4.1, role:"gc", sub:["klatrer"]},
+  {n:"Filippo Ganna", t:"Netcompany INEOS Cycling Team", v:8500000, pop:4.6, role:"tt", sub:["rouleur"]},
+  {n:"Thomas Pidcock", t:"Pinarello Q36.5 Pro Cycling Team", v:8500000, pop:2.6, role:"puncheur", sub:["klatrer","gc"]},
+  {n:"Tobias Halland Johannessen", t:"Uno-X Mobility", v:8500000, pop:3.2, role:"gc", sub:["klatrer"]},
+  {n:"Biniam Girmay", t:"NSN Cycling Team", v:8000000, pop:3.5, role:"sprint", sub:["puncheur"]},
+  {n:"Dorian Godon", t:"Netcompany INEOS Cycling Team", v:8000000, pop:1.7, role:"puncheur", sub:["sprint"]},
+  {n:"Lenny Martinez", t:"Bahrain - Victorious", v:8000000, pop:1.8, role:"klatrer", sub:["gc"]},
+  {n:"Mattias Skjelmose", t:"Lidl - Trek", v:8000000, pop:6.6, role:"gc", sub:["puncheur","klatrer"]},
+  {n:"Richard Carapaz", t:"EF Education - EasyPost", v:8000000, pop:1.8, role:"gc", sub:["klatrer"]},
+  {n:"Antonio Tiberi", t:"Bahrain - Victorious", v:7500000, pop:0.9, role:"gc", sub:["klatrer"]},
+  {n:"Arnaud De Lie", t:"Lotto Intermarché", v:7500000, pop:1.6, role:"sprint", sub:["puncheur"]},
+  {n:"Cian Uijtdebroeks", t:"Movistar Team", v:7500000, pop:1.5, role:"gc", sub:["klatrer"]},
+  {n:"Derek Gee", t:"Lidl - Trek", v:7500000, pop:0.5, role:"gc", sub:["klatrer","tt"]},
+  {n:"Jai Hindley", t:"Red Bull - BORA - hansgrohe", v:7500000, pop:2.4, role:"gc", sub:["klatrer"]},
+  {n:"Kevin Vauquelin", t:"Netcompany INEOS Cycling Team", v:7500000, pop:18.4, role:"gc", sub:["puncheur","klatrer"]},
+  {n:"Matteo Jorgenson", t:"Team Visma | Lease a Bike", v:7500000, pop:6.6, role:"gc", sub:["puncheur","tt"]},
+  {n:"Thymen Arensman", t:"Netcompany INEOS Cycling Team", v:7500000, pop:4.2, role:"klatrer", sub:["gc"]},
+  {n:"Egan Bernal", t:"Netcompany INEOS Cycling Team", v:7000000, pop:0.5, role:"gc", sub:["klatrer"]},
+  {n:"Joshua Tarling", t:"Netcompany INEOS Cycling Team", v:7000000, pop:0.4, role:"tt", sub:["rouleur"]},
+  {n:"Matthew Riccitello", t:"Decathlon CMA CGM Team", v:7000000, pop:0.4, role:"klatrer", sub:["gc"]},
+  {n:"Milan Fretin", t:"Cofidis", v:7000000, pop:0.7, role:"sprint", sub:[]},
+  {n:"Lennert Van Eetvelt", t:"Lotto Intermarché", v:6500000, pop:1.1, role:"klatrer", sub:["gc"]},
+  {n:"Maxim Van Gils", t:"Red Bull - BORA - hansgrohe", v:6500000, pop:3.8, role:"puncheur", sub:["klatrer"]},
+  {n:"Michael Matthews", t:"Team Jayco AlUla", v:6500000, pop:1.4, role:"puncheur", sub:["sprint"]},
+  {n:"Romain Gregoire", t:"Groupama - FDJ United", v:6500000, pop:1.5, role:"puncheur", sub:["klatrer"]},
+  {n:"Sepp Kuss", t:"Team Visma | Lease a Bike", v:6500000, pop:6.2, role:"klatrer", sub:["gc"]},
+  {n:"Adam Yates", t:"UAE Team Emirates - XRG", v:6000000, pop:9.2, role:"gc", sub:["klatrer"]},
+  {n:"Ben Healy", t:"EF Education - EasyPost", v:6000000, pop:13.1, role:"puncheur", sub:["klatrer","gc"]},
+  {n:"Ben O'Connor", t:"Team Jayco AlUla", v:6000000, pop:3.5, role:"gc", sub:["klatrer"]},
+  {n:"Damiano Caruso", t:"Bahrain - Victorious", v:6000000, pop:0.3, role:"klatrer", sub:["gc"]},
+  {n:"Davide Piganzoli", t:"Team Visma | Lease a Bike", v:6000000, pop:3.9, role:"klatrer", sub:["gc"]},
+  {n:"Fernando Gaviria Rendon", t:"Caja Rural - Seguros RGA", v:6000000, pop:0.3, role:"sprint", sub:[]},
+  {n:"Michael Storer", t:"Tudor Pro Cycling Team", v:6000000, pop:1.5, role:"klatrer", sub:["gc"]},
+  {n:"Phil Bauhaus", t:"Bahrain - Victorious", v:6000000, pop:0.4, role:"sprint", sub:[]},
+  {n:"Alex Baudin", t:"EF Education - EasyPost", v:5500000, pop:3.7, role:"klatrer", sub:["puncheur"]},
+  {n:"Arvid de Kleijn", t:"Tudor Pro Cycling Team", v:5500000, pop:0.3, role:"sprint", sub:[]},
+  {n:"Brandon McNulty", t:"UAE Team Emirates - XRG", v:5500000, pop:4.1, role:"tt", sub:["gc","rouleur"]},
+  {n:"Einer Augusto Rubio", t:"Movistar Team", v:5500000, pop:1.1, role:"klatrer", sub:["gc"]},
+  {n:"Luke Plapp", t:"Team Jayco AlUla", v:5500000, pop:1.7, role:"tt", sub:["gc","rouleur"]},
+  {n:"Mauro Schmid", t:"Team Jayco AlUla", v:5500000, pop:1.3, role:"rouleur", sub:["puncheur"]},
+  {n:"Max Kanter", t:"XDS Astana Team", v:5500000, pop:0.7, role:"sprint", sub:[]},
+  {n:"Pascal Ackermann", t:"Team Jayco AlUla", v:5500000, pop:1.3, role:"sprint", sub:[]},
+  {n:"Pavel Bittner", t:"Team Picnic PostNL", v:5500000, pop:1.0, role:"sprint", sub:[]},
+  {n:"Søren Wærenskjold", t:"Uno-X Mobility", v:5500000, pop:2.8, role:"sprint", sub:["rouleur"]},
+  {n:"Bruno Armirail", t:"Team Visma | Lease a Bike", v:5000000, pop:3.8, role:"tt", sub:["rouleur"]},
+  {n:"Cees Bol", t:"Decathlon CMA CGM Team", v:5000000, pop:0.5, role:"sprint", sub:[]},
+  {n:"Chris Harper", t:"Pinarello Q36.5 Pro Cycling Team", v:5000000, pop:0.1, role:"klatrer", sub:[]},
+  {n:"Harold Tejada", t:"XDS Astana Team", v:5000000, pop:1.2, role:"klatrer", sub:["gc"]},
+  {n:"Ion Izagirre Insausti", t:"Cofidis", v:5000000, pop:1.0, role:"puncheur", sub:["klatrer"]},
+  {n:"Julian Alaphilippe", t:"Tudor Pro Cycling Team", v:5000000, pop:4.2, role:"puncheur", sub:[]},
+  {n:"Matteo Trentin", t:"Tudor Pro Cycling Team", v:5000000, pop:1.3, role:"rouleur", sub:["sprint","puncheur"]},
+  {n:"Sergio Higuita", t:"XDS Astana Team", v:5000000, pop:0.6, role:"klatrer", sub:["puncheur","gc"]},
+  {n:"Torstein Træen", t:"Uno-X Mobility", v:5000000, pop:0.7, role:"klatrer", sub:["rouleur"]},
+  {n:"Valentin Paret-Peintre", t:"Soudal Quick-Step", v:5000000, pop:3.7, role:"klatrer", sub:["gc"]},
+  {n:"Anthony Turgis", t:"TotalEnergies", v:4500000, pop:0.9, role:"puncheur", sub:["rouleur"]},
+  {n:"Ilan van Wilder", t:"Soudal Quick-Step", v:4500000, pop:3.9, role:"klatrer", sub:["gc"]},
+  {n:"Javier Romo", t:"Movistar Team", v:4500000, pop:0.3, role:"klatrer", sub:["puncheur"]},
+  {n:"Jonas Abrahamsen", t:"Uno-X Mobility", v:4500000, pop:7.4, role:"puncheur", sub:["rouleur","sprint"]},
+  {n:"Jordan Jegat", t:"TotalEnergies", v:4500000, pop:2.8, role:"klatrer", sub:["gc"]},
+  {n:"Magnus Cort", t:"Uno-X Mobility", v:4500000, pop:16.9, role:"sprint", sub:["puncheur","rouleur"]},
+  {n:"Marc Hirschi", t:"Tudor Pro Cycling Team", v:4500000, pop:0.9, role:"puncheur", sub:[]},
+  {n:"Mike Teunissen", t:"XDS Astana Team", v:4500000, pop:0.8, role:"rouleur", sub:["sprint"]},
+  {n:"Quinn Simmons", t:"Lidl - Trek", v:4500000, pop:10.1, role:"rouleur", sub:["puncheur"]},
+  {n:"Ramses Debruyne", t:"Alpecin-Premier Tech", v:4500000, pop:0.2, role:"rouleur", sub:[]},
+  {n:"Raul Garcia Pierna", t:"Movistar Team", v:4500000, pop:0.2, role:"klatrer", sub:[]},
+  {n:"Rick Pluimers", t:"Tudor Pro Cycling Team", v:4500000, pop:0.5, role:"klatrer", sub:[]},
+  {n:"Simone Velasco", t:"XDS Astana Team", v:4500000, pop:0.2, role:"puncheur", sub:[]},
+  {n:"Tim Wellens", t:"UAE Team Emirates - XRG", v:4500000, pop:8.5, role:"puncheur", sub:["rouleur"]},
+  {n:"Aaron Gate", t:"XDS Astana Team", v:4000000, pop:0.4, role:"rouleur", sub:["tt"]},
+  {n:"Abel Balderstone", t:"Caja Rural - Seguros RGA", v:4000000, pop:1.3, role:"klatrer", sub:[]},
+  {n:"Alex Aranburu", t:"Cofidis", v:4000000, pop:4.5, role:"puncheur", sub:["rouleur"]},
+  {n:"Brent Van Moer", t:"Pinarello Q36.5 Pro Cycling Team", v:4000000, pop:0.1, role:"rouleur", sub:["tt"]},
+  {n:"Clément Braz Afonso", t:"Groupama - FDJ United", v:4000000, pop:0.3, role:"rouleur", sub:[]},
+  {n:"Clement Russo", t:"Groupama - FDJ United", v:4000000, pop:0.2, role:"rouleur", sub:[]},
+  {n:"Daan Hoole", t:"Decathlon CMA CGM Team", v:4000000, pop:2.5, role:"tt", sub:["rouleur"]},
+  {n:"Davide Ballerini", t:"XDS Astana Team", v:4000000, pop:0.7, role:"rouleur", sub:["sprint"]},
+  {n:"Fred Wright", t:"Pinarello Q36.5 Pro Cycling Team", v:4000000, pop:2.1, role:"rouleur", sub:["puncheur"]},
+  {n:"Georg Steinhauser", t:"EF Education - EasyPost", v:4000000, pop:0.5, role:"klatrer", sub:[]},
+  {n:"Guillaume Martin", t:"Groupama - FDJ United", v:4000000, pop:2.3, role:"klatrer", sub:["gc"]},
+  {n:"Jake Stewart", t:"NSN Cycling Team", v:4000000, pop:0.7, role:"sprint", sub:[]},
+  {n:"Jasper Stuyven", t:"Soudal Quick-Step", v:4000000, pop:6.3, role:"rouleur", sub:["sprint","puncheur"]},
+  {n:"Jefferson Alveiro Cepeda", t:"Movistar Team", v:4000000, pop:0.2, role:"klatrer", sub:[]},
+  {n:"Jenthe Biermans", t:"Cofidis", v:4000000, pop:0.5, role:"rouleur", sub:[]},
+  {n:"Jose Felix Parra", t:"Caja Rural - Seguros RGA", v:4000000, pop:0.4, role:"klatrer", sub:[]},
+  {n:"Mathias Vacek", t:"Lidl - Trek", v:4000000, pop:11.9, role:"rouleur", sub:["tt","puncheur"]},
+  {n:"Michael Valgren", t:"EF Education - EasyPost", v:4000000, pop:3.8, role:"puncheur", sub:["rouleur"]},
+  {n:"Pablo Castrillo", t:"Movistar Team", v:4000000, pop:1.5, role:"klatrer", sub:[]},
+  {n:"Sebastian Berwick", t:"Caja Rural - Seguros RGA", v:4000000, pop:0.2, role:"klatrer", sub:[]},
+  {n:"Tiesj Benoot", t:"Decathlon CMA CGM Team", v:4000000, pop:4.1, role:"rouleur", sub:["puncheur"]},
+  {n:"Tobias Foss", t:"Netcompany INEOS Cycling Team", v:4000000, pop:4.6, role:"tt", sub:["rouleur"]},
+  {n:"Victor Campenaerts", t:"Team Visma | Lease a Bike", v:4000000, pop:15.8, role:"rouleur", sub:["tt"]},
+  {n:"Yannis Voisard", t:"Tudor Pro Cycling Team", v:4000000, pop:0.2, role:"klatrer", sub:[]},
+  {n:"Alexandre Delettre", t:"TotalEnergies", v:3500000, pop:0.6, role:"klatrer", sub:[]},
+  {n:"Anthon Charmig", t:"Uno-X Mobility", v:3500000, pop:7.0, role:"klatrer", sub:["rouleur"]},
+  {n:"Aurelien Paret-Peintre", t:"Decathlon CMA CGM Team", v:3500000, pop:2.0, role:"klatrer", sub:[]},
+  {n:"Carlos Verona", t:"Lidl - Trek", v:3500000, pop:1.7, role:"klatrer", sub:["rouleur"]},
+  {n:"Clement Berthet", t:"Groupama - FDJ United", v:3500000, pop:0.2, role:"klatrer", sub:[]},
+  {n:"Dylan Van Baarle", t:"Soudal Quick-Step", v:3500000, pop:3.4, role:"rouleur", sub:["tt"]},
+  {n:"Edoardo Affini", t:"Team Visma | Lease a Bike", v:3500000, pop:22.9, role:"tt", sub:["rouleur"]},
+  {n:"Edward Planckaert", t:"Alpecin-Premier Tech", v:3500000, pop:0.2, role:"rouleur", sub:[]},
+  {n:"Emiel Verstrynge", t:"Alpecin-Premier Tech", v:3500000, pop:2.7, role:"rouleur", sub:[]},
+  {n:"Felix Grossschartner", t:"UAE Team Emirates - XRG", v:3500000, pop:4.7, role:"klatrer", sub:["rouleur","tt"]},
+  {n:"Florian Vermeersch", t:"UAE Team Emirates - XRG", v:3500000, pop:6.2, role:"rouleur", sub:["tt"]},
+  {n:"Frits Biesterbos", t:"Team Picnic PostNL", v:3500000, pop:0.2, role:"rouleur", sub:[]},
+  {n:"Georg Zimmermann", t:"Lotto Intermarché", v:3500000, pop:3.3, role:"puncheur", sub:["klatrer"]},
+  {n:"George Bennett", t:"NSN Cycling Team", v:3500000, pop:1.0, role:"klatrer", sub:["rouleur"]},
+  {n:"Hugo Page", t:"Cofidis", v:3500000, pop:0.9, role:"rouleur", sub:["sprint"]},
+  {n:"Jakub Otruba", t:"Caja Rural - Seguros RGA", v:3500000, pop:0.2, role:"rouleur", sub:[]},
+  {n:"Jan Tratnik", t:"Red Bull - BORA - hansgrohe", v:3500000, pop:6.1, role:"rouleur", sub:["tt"]},
+  {n:"Jenno Berckmoes", t:"Lotto Intermarché", v:3500000, pop:0.3, role:"puncheur", sub:[]},
+  {n:"Kasper Asgreen", t:"EF Education - EasyPost", v:3500000, pop:14.3, role:"rouleur", sub:["tt","puncheur"]},
+  {n:"Lewis Askey", t:"NSN Cycling Team", v:3500000, pop:0.4, role:"rouleur", sub:["sprint"]},
+  {n:"Liam Slock", t:"Lotto Intermarché", v:3500000, pop:0.2, role:"rouleur", sub:[]},
+  {n:"Marco Frigo", t:"NSN Cycling Team", v:3500000, pop:0.9, role:"klatrer", sub:[]},
+  {n:"Matej Mohoric", t:"Bahrain - Victorious", v:3500000, pop:5.9, role:"puncheur", sub:["rouleur"]},
+  {n:"Mattia Cattaneo", t:"Red Bull - BORA - hansgrohe", v:3500000, pop:7.2, role:"tt", sub:["rouleur"]},
+  {n:"Michal Kwiatkowski", t:"Netcompany INEOS Cycling Team", v:3500000, pop:24.8, role:"puncheur", sub:["rouleur"]},
+  {n:"Nelson Oliveira", t:"Movistar Team", v:3500000, pop:0.3, role:"tt", sub:["rouleur"]},
+  {n:"Nicolas Vinokurov", t:"XDS Astana Team", v:3500000, pop:0.4, role:"rouleur", sub:[]},
+  {n:"Per Strand Hagenes", t:"Team Visma | Lease a Bike", v:3500000, pop:14.2, role:"rouleur", sub:["puncheur"]},
+  {n:"Quinten Hermans", t:"Pinarello Q36.5 Pro Cycling Team", v:3500000, pop:0.7, role:"puncheur", sub:[]},
+  {n:"Tim van Dijke", t:"Red Bull - BORA - hansgrohe", v:3500000, pop:5.0, role:"rouleur", sub:[]},
+  {n:"Toms Skujins", t:"Lidl - Trek", v:3500000, pop:2.5, role:"puncheur", sub:["rouleur"]},
+  {n:"Xabier Mikel Azparren", t:"Pinarello Q36.5 Pro Cycling Team", v:3500000, pop:0.1, role:"rouleur", sub:[]},
+  {n:"Xandro Meurisse", t:"Pinarello Q36.5 Pro Cycling Team", v:3500000, pop:0.0, role:"puncheur", sub:[]},
+  {n:"Alex Molenaar", t:"Caja Rural - Seguros RGA", v:3000000, pop:4.2, role:"klatrer", sub:[]},
+  {n:"Anders Halland Johannessen", t:"Uno-X Mobility", v:3000000, pop:8.5, role:"klatrer", sub:["rouleur"]},
+  {n:"Baptiste Veistroffer", t:"Lotto Intermarché", v:3000000, pop:0.9, role:"rouleur", sub:[]},
+  {n:"Benjamin Thomas", t:"Cofidis", v:3000000, pop:2.8, role:"rouleur", sub:["tt"]},
+  {n:"Damien Howson", t:"Pinarello Q36.5 Pro Cycling Team", v:3000000, pop:0.1, role:"rouleur", sub:["klatrer"]},
+  {n:"Ewen Costiou", t:"Groupama - FDJ United", v:3000000, pop:0.4, role:"puncheur", sub:[]},
+  {n:"Felix Engelhardt", t:"Team Jayco AlUla", v:3000000, pop:1.3, role:"klatrer", sub:[]},
+  {n:"Frank van den Broek", t:"Team Picnic PostNL", v:3000000, pop:4.6, role:"puncheur", sub:["klatrer"]},
+  {n:"Huub Artz", t:"Lotto Intermarché", v:3000000, pop:0.3, role:"rouleur", sub:[]},
+  {n:"John Degenkolb", t:"Team Picnic PostNL", v:3000000, pop:1.3, role:"rouleur", sub:["sprint"]},
+  {n:"Joris Delbove", t:"TotalEnergies", v:3000000, pop:0.2, role:"rouleur", sub:[]},
+  {n:"Krists Neilands", t:"NSN Cycling Team", v:3000000, pop:1.2, role:"puncheur", sub:["rouleur"]},
+  {n:"Lars Craps", t:"Lotto Intermarché", v:3000000, pop:0.9, role:"rouleur", sub:[]},
+  {n:"Louis Vervaeke", t:"Soudal Quick-Step", v:3000000, pop:2.9, role:"rouleur", sub:["klatrer"]},
+  {n:"Marco Haller", t:"Tudor Pro Cycling Team", v:3000000, pop:0.7, role:"rouleur", sub:["sprint"]},
+  {n:"Mathis Le Berre", t:"TotalEnergies", v:3000000, pop:0.3, role:"rouleur", sub:[]},
+  {n:"Matteo Vercher", t:"TotalEnergies", v:3000000, pop:0.4, role:"puncheur", sub:[]},
+  {n:"Nico Denz", t:"Red Bull - BORA - hansgrohe", v:3000000, pop:20.0, role:"rouleur", sub:["puncheur"]},
+  {n:"Nicolas Breuillard", t:"TotalEnergies", v:3000000, pop:0.2, role:"klatrer", sub:[]},
+  {n:"Nicolas Prodhomme", t:"Decathlon CMA CGM Team", v:3000000, pop:2.8, role:"klatrer", sub:[]},
+  {n:"Nils Politt", t:"UAE Team Emirates - XRG", v:3000000, pop:33.4, role:"rouleur", sub:["tt"]},
+  {n:"Quentin Pacher", t:"Groupama - FDJ United", v:3000000, pop:0.3, role:"puncheur", sub:["klatrer"]},
+  {n:"Sean Quinn", t:"EF Education - EasyPost", v:3000000, pop:1.1, role:"klatrer", sub:["puncheur"]},
+  {n:"Stefano Oldani", t:"Caja Rural - Seguros RGA", v:3000000, pop:0.9, role:"rouleur", sub:["puncheur"]},
+  {n:"Thibault Guernalec", t:"TotalEnergies", v:3000000, pop:0.3, role:"rouleur", sub:[]},
+  {n:"Tom Van Asbroeck", t:"NSN Cycling Team", v:3000000, pop:0.6, role:"rouleur", sub:["sprint"]},
+  {n:"Vlad Van Mechelen", t:"Bahrain - Victorious", v:3000000, pop:0.5, role:"rouleur", sub:[]},
+  {n:"Warren Barguil", t:"Team Picnic PostNL", v:3000000, pop:7.9, role:"klatrer", sub:[]},
+  {n:"Alex Kirsch", t:"Cofidis", v:2500000, pop:18.7, role:"rouleur", sub:[]},
+  {n:"Anders Skaarseth", t:"Uno-X Mobility", v:2500000, pop:9.3, role:"rouleur", sub:[]},
+  {n:"Bert van Lerberghe", t:"Soudal Quick-Step", v:2500000, pop:12.3, role:"rouleur", sub:["sprint"]},
+  {n:"Joel Nicolau", t:"Caja Rural - Seguros RGA", v:2500000, pop:5.9, role:"klatrer", sub:[]},
+  {n:"Jonas Rickaert", t:"Alpecin-Premier Tech", v:2500000, pop:15.2, role:"rouleur", sub:["sprint"]},
+  {n:"Julius van den Berg", t:"Team Picnic PostNL", v:2500000, pop:1.6, role:"rouleur", sub:[]},
+  {n:"Kamil Gradek", t:"Bahrain - Victorious", v:2500000, pop:1.0, role:"rouleur", sub:["tt"]},
+  {n:"Kelland O'Brien", t:"Team Jayco AlUla", v:2500000, pop:3.0, role:"rouleur", sub:["tt"]},
+  {n:"Lorenzo Germani", t:"Groupama - FDJ United", v:2500000, pop:0.6, role:"rouleur", sub:[]},
+  {n:"Luke Durbridge", t:"Team Jayco AlUla", v:2500000, pop:7.9, role:"rouleur", sub:["tt"]},
+  {n:"Matis Louvel", t:"NSN Cycling Team", v:2500000, pop:1.7, role:"rouleur", sub:[]},
+  {n:"Max Walker", t:"EF Education - EasyPost", v:2500000, pop:2.0, role:"rouleur", sub:[]},
+  {n:"Michel Hessmann", t:"Movistar Team", v:2500000, pop:0.8, role:"rouleur", sub:["tt"]},
+  {n:"Niklas Märkl", t:"Team Picnic PostNL", v:2500000, pop:0.7, role:"rouleur", sub:[]},
+  {n:"Pascal Eenkhoorn", t:"Soudal Quick-Step", v:2500000, pop:3.6, role:"rouleur", sub:["sprint"]},
+  {n:"Piet Allegaert", t:"Cofidis", v:2500000, pop:5.8, role:"rouleur", sub:["sprint"]},
+  {n:"Robbe Dhondt", t:"Team Picnic PostNL", v:2500000, pop:1.0, role:"rouleur", sub:["sprint"]},
+  {n:"Robert Stannard", t:"Bahrain - Victorious", v:2500000, pop:2.1, role:"puncheur", sub:["rouleur"]},
+  {n:"Silvan Dillier", t:"Alpecin-Premier Tech", v:2500000, pop:2.5, role:"rouleur", sub:[]},
+  {n:"Tim Marsman", t:"Alpecin-Premier Tech", v:2500000, pop:1.5, role:"rouleur", sub:[]},
+];
+
+/* ============================================================
+   DATA: ETAPER 2026
+   type: flad | bakket | bjerg | tt_hold | tt_individuel
+   ============================================================ */
+const STAGES = [
+  {no:1,  date:"Lør 4. jul", from:"Barcelona", to:"Barcelona", km:19, type:"tt_hold", climb:231, label:"Hold-enkeltstart",
+    note:"Holdtidskørsel: væksten (1.=200k ned til 5.=25k) gives til ALLE ryttere på de placerede hold — så en billig hjælper fra et stærkt hold er lige så meget værd som stjernen. Bookmakernes lag: INEOS og UAE er topfavoritter; Visma, Red Bull og Lidl-Trek outsidere. Kurset slutter op ad Montjuïc (op til 7,9%), så holdene skal også kunne klatre. Fri transfer indtil start — load billige ryttere fra favorit-holdene gratis."},
+  {no:2,  date:"Søn 5. jul", from:"Tarragona", to:"Barcelona", km:182, type:"bakket", climb:2391, label:"Bakket",
+    note:"Kuperet finale ind mod Barcelona. Puncheurs og hurtige all-roundere (Van der Poel-typen) frem for rene sprintere."},
+  {no:3,  date:"Man 6. jul", from:"Granollers", to:"Les Angles", km:196, type:"bjerg", climb:3906, label:"Bjerg",
+    note:"Første rigtige bjergdag. GC-ryttere og klatrere. Kaptajn på din bedste klatrer."},
+  {no:4,  date:"Tir 7. jul", from:"Carcassonne", to:"Foix", km:182, type:"bakket", climb:3259, label:"Bakket",
+    note:"Hård bakket etape — typisk udbrudsdag. Puncheurs og stærke all-roundere."},
+  {no:5,  date:"Ons 8. jul", from:"Lannemezan", to:"Pau", km:158, type:"flad", climb:1883, label:"Flad",
+    note:"Massespurt forventet. Læg sprintere ind: Merlier, Philipsen, Kooij, Pedersen."},
+  {no:6,  date:"Tor 9. jul", from:"Pau", to:"Gavarnie-Gèdre", km:186, type:"bjerg", climb:3978, label:"Bjerg",
+    note:"Tourmalet + Aspin. Stor GC-dag i Pyrenæerne. Klatrere og GC-favoritter, kaptajn på Pogačar/Vingegaard."},
+  {no:7,  date:"Fre 10. jul", from:"Hagetmau", to:"Bordeaux", km:175, type:"flad", climb:2053, label:"Flad",
+    note:"Klassisk Bordeaux-spurt. Rene sprintere."},
+  {no:8,  date:"Lør 11. jul", from:"Périgueux", to:"Bergerac", km:182, type:"flad", climb:1346, label:"Flad",
+    note:"Endnu en spurtdag. Behold sprinterne."},
+  {no:9,  date:"Søn 12. jul", from:"Malemort", to:"Ussel", km:185, type:"bakket", climb:2427, label:"Bakket",
+    note:"Kuperet overgangsetape før hviledag. Udbrud sandsynligt — puncheurs."},
+  {no:10, date:"Tir 14. jul", from:"Aurillac", to:"Le Lioran", km:167, type:"bjerg", climb:2990, label:"Bjerg",
+    note:"Bastilledag i Massif Central. Eksplosiv bjergdag — klatrere og angrebsivrige ryttere."},
+  {no:11, date:"Ons 15. jul", from:"Vichy", to:"Nevers", km:161, type:"flad", climb:653, label:"Flad",
+    note:"Fladeste dag i løbet. Ren massespurt — sprintere."},
+  {no:12, date:"Tor 16. jul", from:"Magny-Cours", to:"Chalon-sur-Saône", km:181, type:"flad", climb:1555, label:"Flad",
+    note:"Spurtdag. Sprintere."},
+  {no:13, date:"Fre 17. jul", from:"Dole", to:"Belfort", km:205, type:"bakket", climb:2373, label:"Bakket",
+    note:"Lang bakket etape mod Vogeserne. Puncheurs / udbrud."},
+  {no:14, date:"Lør 18. jul", from:"Mulhouse", to:"Le Markstein", km:155, type:"bjerg", climb:4602, label:"Bjerg",
+    note:"Syv stigninger i Vogeserne. Tung bjergdag — klatrere."},
+  {no:15, date:"Søn 19. jul", from:"Champagnole", to:"Plateau de Solaison", km:184, type:"bjerg", climb:4700, label:"Bjerg",
+    note:"Ny brutal bjergafslutning (9,2% snit). Rene klatrere, kaptajn på GC-favorit."},
+  {no:16, date:"Tir 21. jul", from:"Évian", to:"Thonon-les-Bains", km:26, type:"tt_individuel", climb:465, label:"Enkeltstart",
+    note:"Individuel enkeltstart. Tidsløbsspecialister: Evenepoel, Ganna, Vingegaard. Kaptajn på den stærkeste mod uret."},
+  {no:17, date:"Ons 22. jul", from:"Chambéry", to:"Voiron", km:175, type:"flad", climb:2361, label:"Flad/bakket",
+    note:"Sidste chance for hurtige ben før Alperne, men kuperet. Sprintere der kan klatre / puncheurs."},
+  {no:18, date:"Tor 23. jul", from:"Voiron", to:"Orcières-Merlette", km:185, type:"bjerg", climb:3950, label:"Bjerg",
+    note:"Alpine-trilogi åbner. Klatrere og GC."},
+  {no:19, date:"Fre 24. jul", from:"Gap", to:"Alpe d'Huez", km:128, type:"bjerg", climb:3605, label:"Bjerg",
+    note:"Kort og eksplosiv Alpe d'Huez. Klatrere, kaptajn på GC-favorit."},
+  {no:20, date:"Lør 25. jul", from:"Le Bourg d'Oisans", to:"Alpe d'Huez", km:171, type:"bjerg", climb:5600, label:"Dronningeetape",
+    note:"Galibier + Sarenne + Alpe d'Huez. Løbets hårdeste dag, 5.600 hm. Her afgøres det — kaptajn på den bedste klatrer."},
+  {no:21, date:"Søn 26. jul", from:"Thoiry", to:"Paris Champs-Élysées", km:130, type:"flad", climb:1978, label:"Finale",
+    note:"Montmartre x3 og spurt på Champs-Élysées. Sprintere der overlever bakkerne — eller puncheurs som Van der Poel."},
+];
+
+/* ============================================================
+   VERIFICEREDE FAVORITTER (kilde: ProCyclingStats + Cyclingnews
+   team-by-team guide, juni 2026). Bruges til at fremhæve reelle
+   favoritter i dagens oplæg, ud over den rene EV-rang.
+   ============================================================ */
+const FAVS = {
+  gc_top:        ["Tadej Pogačar","Jonas Vingegaard","Remco Evenepoel","Florian Lipowitz","Paul Seixas","Isaac Del Toro","Juan Ayuso"],
+  sprint:        ["Tim Merlier","Jasper Philipsen","Olav Kooij","Biniam Girmay","Arnaud De Lie","Mads Pedersen","Pascal Ackermann","Pavel Bittner","Milan Fretin","Søren Wærenskjold","Phil Bauhaus","Fernando Gaviria Rendon","Arvid de Kleijn"],
+  puncheur_hilly:["Mathieu van der Poel","Mattias Skjelmose","Michael Matthews","Ben Healy","Julian Alaphilippe","Kevin Vauquelin","Mauro Schmid","Quinten Hermans","Magnus Cort","Romain Gregoire","Marc Hirschi"],
+  klatrer_break: ["Lenny Martinez","Thymen Arensman","Sergio Higuita","Einer Augusto Rubio","Lennert Van Eetvelt","Valentin Paret-Peintre","Ben O'Connor","Michael Storer","Jordan Jegat","Harold Tejada","Guillaume Martin","Egan Bernal","Derek Gee"],
+  tt:            ["Remco Evenepoel","Filippo Ganna","Jonas Vingegaard","Brandon McNulty","Luke Plapp","Edoardo Affini","Joshua Tarling","Tobias Foss","Daan Hoole"],
+  ttt_teams:     ["Netcompany INEOS Cycling Team","UAE Team Emirates - XRG","Team Visma | Lease a Bike","Red Bull - BORA - hansgrohe","Lidl - Trek"],
+};
+// returnér relevante favorit-navne for en etapetype
+function stageFavs(stage){
+  switch(stage.type){
+    case "flad": return FAVS.sprint;
+    case "bakket": return FAVS.puncheur_hilly;
+    case "bjerg": return [...FAVS.gc_top, ...FAVS.klatrer_break];
+    case "tt_individuel": return FAVS.tt;
+    case "tt_hold": return RIDERS.filter(r=>FAVS.ttt_teams.includes(r.t)).map(r=>r.n);
+    default: return [];
+  }
+}
+function isFav(name,stage){ return stageFavs(stage).includes(name); }
+
+/* ============================================================
+   POINTSYSTEM (kr.) — fra reglerne
+   ============================================================ */
+const ETAPE_PLACERING = {1:200000,2:150000,3:130000,4:120000,5:110000,6:100000,7:95000,8:90000,9:85000,10:80000,11:70000,12:55000,13:40000,14:30000,15:15000};
+const SAMLET = {1:100000,2:90000,3:80000,4:70000,5:60000,6:50000,7:40000,8:30000,9:20000,10:10000};
+const HOLDBONUS = {1:60000,2:30000,3:20000};
+const TROJE = {fører:25000,point:25000,bjerg:25000,ungdom:15000,angreb:50000};
+const SPURT_BJERG_PR_POINT = 3000;
+const HOLDTID = {1:200000,2:150000,3:100000,4:50000,5:25000};
+const ETAPEBONUS = {8:400000,7:220000,6:120000,5:65000,4:35000,3:15000,2:8000,1:4000};
+
+/* ============================================================
+   EV-MOTOR: forventet vækst for rytter på given etapetype
+   Heuristik baseret på rolle-match + pointsystem.
+   Returnerer estimeret kr-vækst (forventningsværdi).
+   ============================================================ */
+/* Holdtidskørsel: bookmaker-lag (odds, juli 2026). Vækst rammer ALLE på
+   holdet ens, så HOLDETS styrke afgør — ikke rytterens egen rolle. */
+const TTT_TIERS = {
+  "Netcompany INEOS Cycling Team":1.0, "UAE Team Emirates - XRG":1.0,
+  "Team Visma | Lease a Bike":0.85, "Red Bull - BORA - hansgrohe":0.85, "Lidl - Trek":0.85,
+  "Decathlon CMA CGM Team":0.55, "EF Education - EasyPost":0.55, "Team Jayco AlUla":0.55,
+  "Alpecin-Premier Tech":0.55, "Movistar Team":0.55, "Bahrain - Victorious":0.55
+};
+const TTT_DEFAULT = 0.30;
+
+function roleFit(rider, type){
+  const primary = rider.role;
+  const roles = [primary, ...(rider.sub||[])];
+  const has = r => roles.includes(r);
+  // score 0..1 hvor godt rytteren matcher etapen
+  switch(type){
+    case "flad":          return has("sprint")?1 : has("puncheur")?0.45 : has("rouleur")?0.3 : 0.12;
+    case "bakket":        return has("puncheur")?1 : has("sprint")?0.6 : has("gc")?0.55 : has("klatrer")?0.5 : 0.25;
+    case "bjerg":         return has("klatrer")?1 : has("gc")?0.95 : has("puncheur")?0.4 : 0.1;
+    case "tt_individuel": // tempo er specialist-disciplin; primær rolle afgør
+      if(primary==="tt") return 1;
+      if(primary==="gc") return 0.72;
+      if(primary==="rouleur") return 0.62;
+      if(has("tt")) return 0.55;           // tt som subrolle
+      if(primary==="puncheur") return 0.30;
+      return 0.15;                          // sprintere OG rene klatrere taber tid
+    case "tt_hold":       return TTT_TIERS[rider.t] ?? TTT_DEFAULT; // holdbaseret
+    default:              return 0.3;
+  }
+}
+// Kvalitetsfaktor: dyrere ryttere vinder oftere → skaleres mildt med værdi
+function quality(rider){
+  return 0.55 + 0.45 * (rider.v / 17000000);
+}
+function expectedGrowth(rider, stage){
+  const fit = roleFit(rider, stage.type);
+  const q = quality(rider);
+  // basisforventning: sandsynlighed for topplacering * typisk udbetaling
+  // skaleret så tal ligner realistisk etapevækst (0 - ~250ك)
+  let base;
+  if(stage.type==="tt_hold"){
+    // holdtid: alle på holdet får samme vækst — billig hjælper = stjerne her
+    base = fit * 190000;
+  } else {
+    base = fit*fit * q * 230000;       // kvadreret fit → spidsere top
+    // trøje/klassement-bonus for GC på bjergdage
+    if(stage.type==="bjerg" && (rider.role==="gc")) base += 35000;
+    // sprintpoint-bonus til sprintere på flade
+    if(stage.type==="flad" && rider.role==="sprint") base += 25000;
+  }
+  // verificeret favorit (PCS/Cyclingnews) → reelt løft i forventning
+  if(typeof isFav==="function" && isFav(rider.n,stage)) base *= 1.18;
+  return Math.round(base);
+}
+function evClass(ev){ return ev>=120000?"hi":ev>=55000?"mid":"lo"; }
+
+/* ----- VINDUE-SCORING: vægtet sum af forventet vækst over kommende etaper -----
+   Nærmeste etape vejer tungest (geometrisk aftagende). */
+function windowWeights(n){
+  const decay=0.62;                       // nærmeste vejer klart tungest
+  const w=[]; let s=0;
+  for(let i=0;i<n;i++){ const x=Math.pow(decay,i); w.push(x); s+=x; }
+  return w.map(x=>x/s);                    // normaliseret så de summer til 1
+}
+function windowStages(startIdx,n){
+  return STAGES.slice(startIdx, Math.min(STAGES.length, startIdx+n));
+}
+// forventet vækst for rytter vægtet over vinduet (kr., sammenlignelig skala)
+function windowGrowth(rider,startIdx,n){
+  const stages=windowStages(startIdx,n);
+  const w=windowWeights(stages.length);
+  let sum=0;
+  stages.forEach((s,i)=>{ sum += expectedGrowth(rider,s)*w[i]; });
+  return Math.round(sum);
+}
+function roleLabel(r){
+  return {sprint:"Sprinter",klatrer:"Klatrer",puncheur:"Puncheur",gc:"Klassement",tt:"Tempo",rouleur:"Rouleur"}[r]||r;
+}
+function rolePillClass(r){
+  return {sprint:"r-sprint",klatrer:"r-klatrer",puncheur:"r-puncheur",gc:"r-gc",tt:"r-tt",rouleur:"r-rouleur"}[r]||"";
+}
+function fmt(n){ return n.toLocaleString("da-DK"); }
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let curStage = 0;            // index i STAGES
+let squad = [];              // valgte ryttere (n-strings)
+let captain = null;
+let windowSize = 4;          // hvor mange etaper frem optimeringen kigger
+let maxMovesPerStage = 3;    // loft på skift pr. etape i sæsonplanen
+
+/* ============================================================
+   RENDER: STAGE HERO
+   ============================================================ */
+function badgeClass(type){
+  if(type==="flad")return"b-flad";
+  if(type==="bakket")return"b-bakket";
+  if(type==="bjerg")return"b-bjerg";
+  return"b-tt";
+}
+function renderHero(){
+  const s = STAGES[curStage];
+  document.getElementById("hero").innerHTML = `
+    <div class="top">
+      <div>
+        <div class="stage-no">Etape ${s.no} · ${s.date}</div>
+        <div class="stage-route">${s.from} → ${s.to}</div>
+        <div class="stage-meta">${s.km} km · ${fmt(s.climb)} højdemeter</div>
+      </div>
+      <span class="badge ${badgeClass(s.type)}">${s.label}</span>
+    </div>
+    <div class="verdict">${s.note}</div>
+  `;
+  document.getElementById("prevBtn").disabled = curStage===0;
+  document.getElementById("nextBtn").disabled = curStage===STAGES.length-1;
+  document.getElementById("liveTag").textContent = `Etape ${s.no} af 21`;
+}
+
+/* ============================================================
+   RENDER: RECOMMENDATIONS
+   ============================================================ */
+function renderRec(){
+  const s = STAGES[curStage];
+  // Rangér efter vindue-vægtet vækst (følger slideren), men vis næste etapes EV-tal.
+  const ranked = RIDERS.map(r=>({
+        ...r,
+        ev:expectedGrowth(r,s),                      // næste etape
+        wg:windowGrowth(r,curStage,windowSize)       // hele vinduet
+      }))
+      .sort((a,b)=>b.wg-a.wg);
+  const top = ranked.slice(0,6);
+  // vis hvilke etaper vinduet dækker, så det er klart hvad rangeringen følger
+  const win=windowStages(curStage,windowSize);
+  const rwn=document.getElementById("recWinNote");
+  if(rwn) rwn.innerHTML = windowSize>1
+    ? `Rangeret over ${windowSize} etaper: <b>${win.map(s=>"E"+s.no).join(" · ")}</b> (nærmeste vejer tungest). Justér vinduet under "Mit hold".`
+    : `Rangeret kun efter næste etape (E${win[0].no}). Justér vinduet under "Mit hold".`;
+  document.getElementById("recList").innerHTML = top.map((r,i)=>`
+    <div class="rider">
+      <div class="rank">${i+1}</div>
+      <div class="body">
+        <div class="nm">${r.n}${isFav(r.n,s)?'<span class="fav-star" title="Favorit ifølge ProCyclingStats/Cyclingnews">★</span>':''}<span class="role-pill ${rolePillClass(r.role)}">${roleLabel(r.role)}</span></div>
+        <div class="tm">${r.t}</div>
+      </div>
+      <div class="right">
+        <div class="val">${fmt(r.v)}</div>
+        <div class="ev ${evClass(r.wg)}">~+${fmt(r.wg)} vindue</div>
+        <div class="pop-tag">${r.pop!=null?r.pop.toFixed(1)+'% har ham':''}</div>
+      </div>
+    </div>
+  `).join("");
+
+  // captain = højeste EV blandt valgt squad hvis muligt, ellers top rytter
+  let capPool = squad.length ? RIDERS.filter(r=>squad.includes(r.n)) : RIDERS;
+  const cap = capPool.map(r=>({...r,ev:expectedGrowth(r,s)})).sort((a,b)=>b.ev-a.ev)[0];
+  document.getElementById("capBox").innerHTML = `
+    <div class="rider">
+      <span class="cap-tag">Kaptajn</span>
+      <div class="rank">©</div>
+      <div class="body">
+        <div class="nm">${cap.n}</div>
+        <div class="why">Højeste forventede vækst ${squad.length?"på dit hold ":""}til denne etapetype. Kaptajnbonus fordobler effektivt rytterens positive vækst (går i banken). Gratis at skifte — gør det hver dag.</div>
+      </div>
+      <div class="right"><div class="ev ${evClass(cap.ev)}">~+${fmt(cap.ev)}</div></div>
+    </div>`;
+
+  const tips = {
+    flad:"Flad dag: hav 3-4 rene sprintere. Etapebonus belønner at have mange ryttere i top 15 — sprintere klumper ofte sammen der.",
+    bakket:"Bakket dag: puncheurs og all-roundere. Svær at forudsige vinder — spred lidt og undgå at betale gebyr for vildt mange skift.",
+    bjerg:"Bjergdag: GC-favoritter og klatrere giver både etapeplacering, klassement OG trøjebonus. De dyre ryttere er ofte pengene værd her.",
+    tt_individuel:"Enkeltstart: kun tidsløbsspecialister scorer. Færre point på spil — overvej om gebyret for at skifte ind/ud er det værd.",
+    tt_hold:"Holdtidskørsel: ALLE på de bedste hold får værdi. Fri transfer endnu (etape 1) — vælg fra de stærkeste tidsløbshold uden at betale gebyr."
+  };
+  document.getElementById("recNote").innerHTML =
+    `<b style="color:var(--maillot)">Strategi:</b> ${tips[s.type]||""} Husk 1% transfergebyr på køb efter etape 1 — et skift skal kunne tjene gebyret hjem i forventet vækst.`;
+}
+
+/* ============================================================
+   RENDER: TEAM BUILDER
+   ============================================================ */
+function teamValue(){ return RIDERS.filter(r=>squad.includes(r.n)).reduce((s,r)=>s+r.v,0); }
+function teamCountByClub(club){ return RIDERS.filter(r=>squad.includes(r.n)&&r.t===club).length; }
+
+function renderPicker(){
+  const used = teamValue();
+  const left = 50000000 - used;
+  const pct = Math.min(100, used/50000000*100);
+  document.getElementById("budgetTxt").textContent = `${fmt(used)} / 50.000.000`;
+  document.getElementById("budgetFill").style.width = pct+"%";
+  document.getElementById("budgetFill").classList.toggle("over", used>50000000);
+  document.getElementById("countTxt").textContent = `${squad.length} / 8 ryttere valgt`;
+  document.getElementById("leftTxt").textContent = `${fmt(left)} tilbage`;
+  document.getElementById("leftTxt").style.color = left<0?"var(--pois)":"var(--mut)";
+
+  const sorted=[...RIDERS].sort((a,b)=>b.v-a.v);
+  document.getElementById("picker").innerHTML = sorted.map(r=>{
+    const sel = squad.includes(r.n);
+    const clubFull = teamCountByClub(r.t)>=2 && !sel;
+    const tooMany = squad.length>=8 && !sel;
+    const noMoney = (used+r.v>50000000) && !sel;
+    const dis = clubFull || tooMany;
+    return `<div class="prow ${sel?'sel':''} ${dis?'dis':''}" data-n="${r.n}">
+      <div class="chk">${sel?'✓':''}</div>
+      <div class="pn">${r.n} <span class="pt">${r.t}${clubFull?' · 2 valgt fra hold':''}${noMoney&&!dis?' · over budget':''}</span></div>
+      <div class="ppop">${r.pop!=null?r.pop.toFixed(1)+'%':''}</div>
+      <div class="pv">${fmt(r.v)}</div>
+    </div>`;
+  }).join("");
+  document.querySelectorAll(".prow").forEach(el=>{
+    el.addEventListener("click",()=>{
+      const n=el.dataset.n;
+      if(squad.includes(n)){ squad=squad.filter(x=>x!==n); if(captain===n)captain=null; }
+      else{
+        const r=RIDERS.find(x=>x.n===n);
+        if(squad.length>=8)return;
+        if(teamCountByClub(r.t)>=2)return;
+        squad.push(n);
+      }
+      renderPicker(); renderSquad(); renderRec(); saveState();
+    });
+  });
+}
+
+function renderSquad(){
+  const box=document.getElementById("squadBox");
+  if(squad.length===0){ box.innerHTML='<p class="muted">Ingen ryttere valgt endnu.</p>'; return; }
+  const rs=RIDERS.filter(r=>squad.includes(r.n)).sort((a,b)=>b.v-a.v);
+  const total=teamValue();
+  box.innerHTML = rs.map(r=>`
+    <div class="squad-line ${captain===r.n?'cap':''}">
+      <span class="nm">${r.n}</span>
+      <span class="v">
+        <span style="cursor:pointer;margin-right:10px;color:${captain===r.n?'var(--pois)':'var(--mut)'}" data-cap="${r.n}">${captain===r.n?'★ kaptajn':'☆ sæt kaptajn'}</span>
+        ${fmt(r.v)}
+      </span>
+    </div>`).join("") +
+    `<div class="squad-line" style="border-bottom:none;margin-top:6px">
+      <span class="nm" style="font-weight:700">I alt (${rs.length}/8)</span>
+      <span class="v" style="color:var(--maillot);font-weight:700">${fmt(total)}</span>
+    </div>`;
+  box.querySelectorAll("[data-cap]").forEach(el=>{
+    el.addEventListener("click",()=>{ captain = el.dataset.cap; renderSquad(); saveState(); });
+  });
+}
+
+/* ============================================================
+   OPTIMIZER: vælg 8 ryttere der maksimerer VINDUE-vægtet vækst
+   under budget 50M og max 2 pr hold.
+   Hvis man allerede har et hold: foreslå kun skift der betaler
+   sig over vinduet (forskel i vinduesvækst > transfergebyr).
+   ============================================================ */
+const FEE=0.01;
+
+function bestSquadForWindow(startIdx,n){
+  const pool=RIDERS.map(r=>({...r, wg:windowGrowth(r,startIdx,n)}));
+  const SLOTS=8, BUDGET=50000000;
+  // billigste-pris-reserve: for at kunne nå 8 skal vi altid kunne fylde resten
+  // med de billigste tilgængelige ryttere. Sortér billigste til reserve-beregning.
+  const cheapestSorted=[...pool].sort((a,b)=>a.v-b.v);
+  function minCostFor(k, excludeClubs, taken){
+    // groft estimat: k billigste der ikke bryder klubregel — bruges som reserve
+    let cost=0,cnt=0,club={...excludeClubs};
+    for(const r of cheapestSorted){
+      if(taken.has(r.n))continue;
+      if((club[r.t]||0)>=2)continue;
+      cost+=r.v; club[r.t]=(club[r.t]||0)+1; cnt++;
+      if(cnt>=k)break;
+    }
+    return cost;
+  }
+  let pick=[], spend=0, club={}, taken=new Set();
+  // Greedy efter rå vinduesvækst, men kun køb hvis vi STADIG kan fylde resten billigst
+  const byWg=[...pool].sort((a,b)=>b.wg-a.wg);
+  for(const r of byWg){
+    if(pick.length>=SLOTS)break;
+    if(taken.has(r.n))continue;
+    if((club[r.t]||0)>=2)continue;
+    const slotsLeftAfter=SLOTS-pick.length-1;
+    const tentativeTaken=new Set(taken); tentativeTaken.add(r.n);
+    const tentativeClub={...club}; tentativeClub[r.t]=(tentativeClub[r.t]||0)+1;
+    const reserve=minCostFor(slotsLeftAfter, tentativeClub, tentativeTaken);
+    if(spend+r.v+reserve>BUDGET)continue;   // ville gøre det umuligt at nå 8
+    pick.push(r); spend+=r.v; club[r.t]=(club[r.t]||0)+1; taken.add(r.n);
+  }
+  // fyld resten med billigste mulige
+  if(pick.length<SLOTS){
+    for(const r of cheapestSorted){
+      if(pick.length>=SLOTS)break;
+      if(taken.has(r.n))continue;
+      if((club[r.t]||0)>=2)continue;
+      if(spend+r.v>BUDGET)continue;
+      pick.push(r); spend+=r.v; club[r.t]=(club[r.t]||0)+1; taken.add(r.n);
+    }
+  }
+  return pick;
+}
+
+// Foreslå skift fra nuværende squad → kun dem der tjener sig hjem over vinduet
+function suggestTransfers(startIdx,n){
+  if(squad.length<8) return null;            // intet fuldt hold endnu
+  return computeTransfers(squad, startIdx, n);
+}
+
+// Ren funktion: givet en liste rytternavne, foreslå skift over vinduet [startIdx, +n]
+// maxMoves: loft på antal skift (undgå at rive holdet fra hinanden)
+// minNet: mindste nettogevinst før et skift overhovedet foreslås
+function computeTransfers(squadNames, startIdx, n, maxMoves, minNet){
+  maxMoves = maxMoves==null ? 99 : maxMoves;
+  minNet   = minNet==null ? 0 : minNet;
+  const have=RIDERS.filter(r=>squadNames.includes(r.n))
+                   .map(r=>({...r,wg:windowGrowth(r,startIdx,n)}));
+  const haveNames=new Set(squadNames);
+  const candidates=RIDERS.filter(r=>!haveNames.has(r.n))
+                   .map(r=>({...r,wg:windowGrowth(r,startIdx,n)}));
+  const moves=[];
+  const haveSorted=[...have].sort((a,b)=>a.wg-b.wg);
+  let clubCount={}; have.forEach(r=>clubCount[r.t]=(clubCount[r.t]||0)+1);
+  const usedOut=new Set(), usedIn=new Set();
+
+  for(const out of haveSorted){
+    if(usedOut.has(out.n))continue;
+    let best=null;
+    for(const inn of candidates){
+      if(usedIn.has(inn.n))continue;
+      const projected=(clubCount[inn.t]||0) - (inn.t===out.t?1:0);
+      if(projected>=2)continue;
+      const gain=inn.wg - out.wg;
+      const fee=inn.v*FEE;
+      const net=gain-fee;
+      if(net>minNet && (!best||net>best.net)) best={out,inn,gain,fee,net};
+    }
+    if(best){
+      moves.push(best); usedOut.add(best.out.n); usedIn.add(best.inn.n);
+      clubCount[best.out.t]--; clubCount[best.inn.t]=(clubCount[best.inn.t]||0)+1;
+    }
+  }
+  // sortér efter nettogevinst og kap til maxMoves (kun de bedste skift)
+  return moves.sort((a,b)=>b.net-a.net).slice(0, maxMoves);
+}
+
+// Bedste kaptajn for en given squad på en bestemt etape (højeste EV)
+function bestCaptain(squadNames, stageIdx){
+  const s=STAGES[stageIdx];
+  return RIDERS.filter(r=>squadNames.includes(r.n))
+               .map(r=>({...r,ev:expectedGrowth(r,s)}))
+               .sort((a,b)=>b.ev-a.ev)[0];
+}
+
+/* ============================================================
+   SÆSONPLAN: rullende plan over alle 21 etaper.
+   - Starter med optimalt hold til etape 1 (over vinduet).
+   - For hver efterfølgende etape: behold holdet, men anvend kun
+     de skift der tjener gebyret hjem over vinduet fra den etape.
+   - Viser kun ÆNDRINGER (ind/ud + kaptajn) pr. etape.
+   - Etaper med faktiske resultater (RESULTS) bygger videre på
+     de faktiske værdier i stedet for estimater.
+   Returnerer: [{stageIdx, squad, moves, captain, isStart}]
+   ============================================================ */
+function buildSeasonPlan(planWindow, maxMovesPerStage){
+  const win = planWindow || windowSize;
+  const cap = maxMovesPerStage==null ? 3 : maxMovesPerStage;
+  const MIN_NET = 30000;   // skift skal give mindst 30k netto over vinduet
+  const plan = [];
+  let curSquad;
+  if(squad.length>=8){ curSquad=[...squad]; }
+  else { curSquad=bestSquadForWindow(0,win).map(r=>r.n); }
+  let capt=bestCaptain(curSquad,0)?.n||null;
+  plan.push({stageIdx:0, squad:[...curSquad], moves:[], captain:capt, isStart:true});
+
+  for(let i=1;i<STAGES.length;i++){
+    const moves = computeTransfers(curSquad, i, win, cap, MIN_NET) || [];
+    moves.forEach(m=>{
+      curSquad = curSquad.filter(x=>x!==m.out.n);
+      curSquad.push(m.inn.n);
+    });
+    capt = bestCaptain(curSquad, i)?.n || capt;
+    plan.push({stageIdx:i, squad:[...curSquad], moves, captain:capt, isStart:false});
+  }
+  return plan;
+}
+
+function optimise(){
+  const n=windowSize;
+  if(squad.length>=8){
+    // har hold → vis konkrete skift
+    const moves=suggestTransfers(curStage,n);
+    renderTransferAdvice(moves);
+  } else {
+    // intet hold → byg fra bunden over vinduet
+    const pick=bestSquadForWindow(curStage,n);
+    squad=pick.map(r=>r.n);
+    captain=[...pick].map(r=>({...r,ev:expectedGrowth(r,STAGES[curStage])}))
+                     .sort((a,b)=>b.ev-a.ev)[0]?.n||null;
+    renderTransferAdvice(null);
+    if(pick.length<8){
+      const box=document.getElementById("transferBox");
+      if(box) box.innerHTML=`<div class="hold-warn">⚠ Kunne kun samle ${pick.length} ryttere under budgettet. Rytterlisten i appen indeholder lige nu kun de dyreste ${RIDERS.length} ryttere — der mangler billige value-ryttere (3-6 mio.) for at fylde et lovligt 8-mandshold. Send resten af rytterlisten, så bygger agenten et komplet hold.</div>`;
+    }
+  }
+  renderPicker(); renderSquad(); renderRec(); saveState();
+  document.querySelector('.tab[data-tab="team"]').click();
+}
+
+function renderTransferAdvice(moves){
+  const box=document.getElementById("transferBox");
+  if(!box) return;
+  const win=windowStages(curStage,windowSize);
+  const winLabel=win.map(s=>"E"+s.no).join(" · ");
+  if(moves===null){
+    box.innerHTML=`<p class="muted">Byg et fuldt hold på 8 ryttere, så foreslår agenten konkrete skift her — baseret på vinduet <b style="color:var(--maillot)">${winLabel}</b>.</p>`;
+    return;
+  }
+  if(moves.length===0){
+    box.innerHTML=`<div class="hold-good">✓ Behold holdet. Ingen skift over vinduet <b>${winLabel}</b> tjener 1%-gebyret hjem. Sæt i stedet kaptajn på din bedste rytter til næste etape (gratis).</div>`;
+    return;
+  }
+  box.innerHTML=`<p class="muted" style="margin-bottom:10px">Vindue: <b style="color:var(--maillot)">${winLabel}</b> · kun skift der betaler sig vist</p>`+
+    moves.map(m=>`
+    <div class="move">
+      <div class="move-out">
+        <span class="tag-out">UD</span>
+        <span class="mn">${m.out.n}</span>
+        <span class="mwg">~+${fmt(m.out.wg)}</span>
+      </div>
+      <div class="move-arrow">↓</div>
+      <div class="move-in">
+        <span class="tag-in">IND</span>
+        <span class="mn">${m.inn.n}</span>
+        <span class="mwg">~+${fmt(m.inn.wg)}</span>
+      </div>
+      <div class="move-net">Netto efter gebyr (${fmt(Math.round(m.fee))}): <b>+${fmt(Math.round(m.net))}</b></div>
+    </div>`).join("")+
+    `<button class="btn" id="applyMoves">Gennemfør disse skift i holdet</button>`;
+  const ap=document.getElementById("applyMoves");
+  if(ap) ap.addEventListener("click",()=>{
+    moves.forEach(m=>{ squad=squad.filter(x=>x!==m.out.n); squad.push(m.inn.n); });
+    // behold kaptajn hvis stadig på holdet, ellers nulstil
+    if(!squad.includes(captain)) captain=null;
+    renderPicker(); renderSquad(); renderRec(); saveState(); renderTransferAdvice(suggestTransfers(curStage,windowSize));
+  });
+}
+
+/* ============================================================
+   PCS-DATA: specialty-points, form og sæsonstatistik.
+   Indlæses ved at paste indholdet af pcs_specialties.json
+   (fra fetch_pcs.py) — gemmes lokalt i browseren.
+   ============================================================ */
+let PCS_DATA = {};
+try{ const raw = localStorage.getItem("tourspillet2026_pcs"); if(raw) PCS_DATA = JSON.parse(raw); }catch(e){}
+
+const PCS_SPECS = [
+  {key:"sprint", da:"Spurt", col:"#6cb8e0"},
+  {key:"hills", da:"Bakker", col:"#e8c558"},
+  {key:"climber", da:"Bjerg", col:"#ef8c7c"},
+  {key:"time_trial", da:"Enkeltstart", col:"#bfa3e6"},
+  {key:"gc", da:"Klassement", col:"#a9d9a9"},
+  {key:"one_day_races", da:"Endagsløb", col:"#cbbf95"},
+];
+let PCS_MAX = {};
+function computePcsMax(){
+  PCS_MAX = {};
+  for(const s of PCS_SPECS){
+    let mx = 0;
+    for(const n in PCS_DATA){ const v = Math.log1p(Math.max(0, PCS_DATA[n][s.key]||0)); if(v>mx) mx=v; }
+    PCS_MAX[s.key] = mx || 1;
+  }
+  let fmx = 0;
+  for(const n in PCS_DATA){ const v = Math.sqrt(Math.max(0, PCS_DATA[n]._form||0)); if(v>fmx) fmx=v; }
+  PCS_MAX._form = fmx || 1;
+}
+computePcsMax();
+function pcsNorm(name, key){
+  const d = PCS_DATA[name]; if(!d) return null;
+  return Math.log1p(Math.max(0, d[key]||0)) / PCS_MAX[key];
+}
+function importPcsData(txt){
+  try{
+    const obj = JSON.parse(txt);
+    if(typeof obj !== "object" || Array.isArray(obj)) throw new Error("forkert format");
+    PCS_DATA = obj;
+    try{ localStorage.setItem("tourspillet2026_pcs", JSON.stringify(obj)); }catch(e){}
+    computePcsMax();
+    return Object.keys(obj).length;
+  }catch(e){ return -1; }
+}
+
+/* ============================================================
+   RYTTER-PROFIL: resultater + grafer
+   RESULTS[riderName] = [{stage, placering, valueAfter}] — tomt indtil
+   du indtaster faktiske resultater. Indtil da viser vi den
+   FORVENTEDE bane: estimeret placering + estimeret værdi.
+   ============================================================ */
+const RESULTS = {};   // udfyldes når faktiske resultater indtastes
+
+// estimeret placering: lavere = bedre. Afledt af EV-rang den dag (kun indikativ)
+function estPlacering(rider,stage){
+  const ranked=RIDERS.map(r=>({n:r.n,ev:expectedGrowth(r,stage)})).sort((a,b)=>b.ev-a.ev);
+  const idx=ranked.findIndex(r=>r.n===rider.n);
+  // mapér rang til en realistisk forventet placering (top-rang ~ top placering)
+  if(idx<0) return null;
+  return Math.max(1, Math.round((idx+1)*0.9));
+}
+// estimeret kumuleret værdi gennem touren (start = nuværende værdi)
+function estValueSeries(rider){
+  let val=rider.v; const series=[{stage:0,val}];
+  STAGES.forEach(s=>{
+    val += Math.round(expectedGrowth(rider,s)*0.55);  // dæmpet, da ikke alle scorer hver dag
+    series.push({stage:s.no,val});
+  });
+  return series;
+}
+
+const TYPE_COLOR={flad:"#6cb8e0",bakket:"#e8c558",bjerg:"#ef8c7c",tt_individuel:"#bfa3e6",tt_hold:"#9b87c9"};
+const TYPE_NAME={flad:"Flad",bakket:"Bakket",bjerg:"Bjerg",tt_individuel:"Enkeltstart",tt_hold:"Holdtid"};
+
+function valueChart(rider){
+  const series = (RESULTS[rider.n]&&RESULTS[rider.n].length)
+    ? [{stage:0,val:rider.v}].concat(RESULTS[rider.n].map(r=>({stage:r.stage,val:r.valueAfter})))
+    : estValueSeries(rider);
+  const W=680,H=190,pl=70,pr=14,pt=14,pb=26;
+  const xs=series.map(s=>s.stage), ys=series.map(s=>s.val);
+  const minY=Math.min(...ys), maxY=Math.max(...ys);
+  const spanY=(maxY-minY)||1;
+  const x=i=>pl+(W-pl-pr)*(i/(STAGES.length));
+  const y=v=>pt+(H-pt-pb)*(1-(v-minY)/spanY);
+  const path=series.map((s,i)=>`${i?'L':'M'}${x(s.stage).toFixed(1)},${y(s.val).toFixed(1)}`).join(' ');
+  // y-akse labels
+  const yl=[minY,minY+spanY/2,maxY].map(v=>
+    `<text x="${pl-8}" y="${y(v)+3}" class="ax" text-anchor="end">${(v/1000000).toFixed(1)}M</text>
+     <line x1="${pl}" y1="${y(v)}" x2="${W-pr}" y2="${y(v)}" class="grid"/>`).join('');
+  // x stage ticks (hver 3.)
+  const xl=STAGES.filter((s,i)=>i%3===0).map(s=>
+    `<text x="${x(s.no)}" y="${H-8}" class="ax" text-anchor="middle">E${s.no}</text>`).join('');
+  // area fill
+  const area=`${path} L${x(series[series.length-1].stage)},${H-pb} L${x(series[0].stage)},${H-pb} Z`;
+  const isEst=!(RESULTS[rider.n]&&RESULTS[rider.n].length);
+  return `<svg viewBox="0 0 ${W} ${H}" class="chart">
+    ${yl}${xl}
+    <path d="${area}" fill="url(#vgrad)" opacity=".18"/>
+    <path d="${path}" fill="none" stroke="var(--maillot)" stroke-width="2.4" stroke-dasharray="${isEst?'5 4':'0'}"/>
+    <defs><linearGradient id="vgrad" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="var(--maillot)"/><stop offset="1" stop-color="var(--maillot)" stop-opacity="0"/>
+    </linearGradient></defs>
+  </svg>`;
+}
+
+function placeringChart(rider){
+  const real=RESULTS[rider.n]||[];
+  const data=STAGES.map(s=>{
+    const r=real.find(x=>x.stage===s.no);
+    return {stage:s.no, type:s.type, plac: r?r.placering: estPlacering(rider,s)};
+  });
+  const W=680,H=200,pl=34,pr=14,pt=14,pb=26;
+  const maxP=Math.max(20, ...data.map(d=>d.plac||0));
+  const bw=(W-pl-pr)/STAGES.length*0.62;
+  const x=no=>pl+(W-pl-pr)*((no-0.5)/STAGES.length);
+  const y=p=>pt+(H-pt-pb)*((p)/maxP);          // placering 1 øverst
+  const grid=[1,5,10,15,20].filter(v=>v<=maxP).map(v=>
+    `<text x="${pl-6}" y="${y(v)+3}" class="ax" text-anchor="end">${v}.</text>
+     <line x1="${pl}" y1="${y(v)}" x2="${W-pr}" y2="${y(v)}" class="grid"/>`).join('');
+  const bars=data.map(d=>{
+    if(!d.plac) return '';
+    const h=(H-pt-pb)-(y(d.plac)-pt);
+    return `<rect x="${x(d.stage)-bw/2}" y="${y(d.plac)}" width="${bw}" height="${Math.max(2,h)}"
+      rx="1.5" fill="${TYPE_COLOR[d.type]}" opacity=".9"><title>E${d.stage}: ${d.plac}. plads (${TYPE_NAME[d.type]})</title></rect>`;
+  }).join('');
+  const xl=STAGES.filter((s,i)=>i%3===0).map(s=>
+    `<text x="${x(s.no)}" y="${H-8}" class="ax" text-anchor="middle">E${s.no}</text>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" class="chart">${grid}${bars}${xl}</svg>`;
+}
+
+function pcsPanel(rider){
+  const d = PCS_DATA[rider.n];
+  if(!d){
+    return `<div class="pcs-empty">Ingen ProCyclingStats-data indlæst for denne rytter endnu.
+      Kør <b>fetch_pcs.py</b> i Claude Code og indsæt JSON-filen nedenfor — så vises
+      specialty-profil, form og sæsonstatistik for alle ryttere.</div>`;
+  }
+  // specialty-barer (log-normaliseret mod feltets bedste)
+  const bars = PCS_SPECS.map(s=>{
+    const norm = pcsNorm(rider.n, s.key) || 0;
+    const raw = d[s.key]||0;
+    return `<div class="pcs-row">
+      <span class="pcs-lbl">${s.da}</span>
+      <span class="pcs-track"><span class="pcs-fill" style="width:${(norm*100).toFixed(0)}%;background:${s.col}"></span></span>
+      <span class="pcs-val">${raw.toLocaleString("da-DK")}</span>
+    </div>`;
+  }).join("");
+  // form-badge
+  const formNorm = Math.sqrt(Math.max(0,d._form||0)) / PCS_MAX._form;
+  const formCls = formNorm>0.6?"hot":formNorm>0.25?"ok":"cold";
+  const formTxt = formNorm>0.6?"🔥 Glohed":formNorm>0.25?"I orden":"Kold / gemt til Touren";
+  // statistik-chips
+  const age = d._birth ? Math.floor((new Date("2026-07-04") - new Date(d._birth)) / 3.15576e10) : null;
+  const chips = [
+    d._wins!=null ? `<span class="chip"><b>${d._wins}</b> sejre i 2026</span>` : "",
+    d._podiums!=null ? `<span class="chip"><b>${d._podiums}</b> podier</span>` : "",
+    d._top10!=null ? `<span class="chip"><b>${d._top10}</b> top-10</span>` : "",
+    age ? `<span class="chip"><b>${age}</b> år</span>` : "",
+    d._nat ? `<span class="chip">${String(d._nat).toUpperCase()}</span>` : "",
+  ].join("");
+  return `
+    <div class="chart-head"><h3>ProCyclingStats-profil</h3>
+      <span class="form-badge ${formCls}">${formTxt} · ${(d._form||0).toLocaleString("da-DK")} pt/10 uger</span></div>
+    <div class="pcs-panel">
+      ${bars}
+      <div class="pcs-chips">${chips}</div>
+      <div class="pcs-note">Barer = karrierepoint pr. speciale, log-skaleret relativt til feltets bedste.
+      Husk: karrieretal favoriserer veteraner — unge talenter (fx Seixas) er undervurderede her.</div>
+    </div>`;
+}
+
+function renderRiderProfile(name){
+  const rider=RIDERS.find(r=>r.n===name);
+  if(!rider){document.getElementById("riderProfile").innerHTML='';return;}
+  const isEst=!(RESULTS[rider.n]&&RESULTS[rider.n].length);
+  const roles=[rider.role,...(rider.sub||[])].map(roleLabel).join(' · ');
+  const legend=Object.entries(TYPE_NAME).filter(([k])=>k!=="tt_hold")
+    .map(([k,v])=>`<span class="lg"><span class="sw" style="background:${TYPE_COLOR[k]}"></span>${v}</span>`).join('');
+  document.getElementById("riderProfile").innerHTML=`
+    <div class="rprofile">
+      <div class="rhead">
+        <div>
+          <div class="rname">${rider.n}</div>
+          <div class="rteam">${rider.t}</div>
+          <div class="rroles">${roles}</div>
+        </div>
+        <div class="rval"><div class="rvnum">${fmt(rider.v)}</div><div class="rvlbl">startværdi</div></div>
+      </div>
+
+      ${pcsPanel(rider)}
+
+      <div class="chart-head"><h3>Værdi gennem Touren</h3>
+        <span class="est-tag">${isEst?'forventet bane':'faktiske data'}</span></div>
+      ${valueChart(rider)}
+
+      <div class="chart-head"><h3>Placering pr. etape</h3>
+        <span class="est-tag">${isEst?'estimat':'faktiske data'}</span></div>
+      <div class="legend">${legend}</div>
+      ${placeringChart(rider)}
+
+      <p class="note">${isEst
+        ? 'Stiplet/lyse grafer er agentens <b>forventning</b> baseret på rytterens profil og etapetyperne — Touren er ikke kørt endnu. Når du indtaster faktiske etaperesultater, bliver graferne til rigtige data.'
+        : 'Baseret på faktiske resultater du har indtastet.'}</p>
+    </div>`;
+}
+
+/* ============================================================
+   RENDER: VINDUE-VISNING
+   ============================================================ */
+function renderWindow(){
+  const win=windowStages(curStage,windowSize);
+  document.getElementById("winTxt").textContent=`${windowSize} etaper`;
+  const ic={flad:"⟶",bakket:"～",bjerg:"▲",tt_individuel:"⏱",tt_hold:"⏱"};
+  document.getElementById("winStages").innerHTML=win.map(s=>
+    `<span class="ws">E${s.no}<span class="wt">${ic[s.type]||""} ${s.label}</span></span>`
+  ).join("");
+}
+
+/* ============================================================
+   RENDER: SÆSONPLAN (kun ændringer pr. etape)
+   ============================================================ */
+function renderSeasonPlan(){
+  const box=document.getElementById("planList");
+  if(!box) return;
+  const plan=buildSeasonPlan(windowSize, maxMovesPerStage);
+  const ic={flad:"⟶",bakket:"～",bjerg:"▲",tt_individuel:"⏱",tt_hold:"⏱"};
+  const totalMoves=plan.reduce((s,p)=>s+p.moves.length,0);
+  let html=`<div class="plan-sum">Planen bruger <b>${totalMoves}</b> skift over hele Touren · vindue ${windowSize} etaper · <span class="muted">justér vinduet under "Mit hold"</span></div>`;
+
+  plan.forEach(p=>{
+    const s=STAGES[p.stageIdx];
+    const capObj=RIDERS.find(r=>r.n===p.captain);
+    if(p.isStart){
+      // starthold: vis hele holdet
+      const rs=RIDERS.filter(r=>p.squad.includes(r.n)).sort((a,b)=>b.v-a.v);
+      const total=rs.reduce((x,r)=>x+r.v,0);
+      html+=`<div class="pstage start">
+        <div class="pstage-head">
+          <span class="pno">Etape ${s.no} · ${s.date}</span>
+          <span class="pbadge ${badgeClass(s.type)}">${ic[s.type]} ${s.label}</span>
+        </div>
+        <div class="pstart-label">Starthold (${fmt(total)})</div>
+        <div class="pstart-grid">
+          ${rs.map(r=>`<div class="pchip ${p.captain===r.n?'cap':''}">${r.n}${p.captain===r.n?' ©':''}<span class="pchv">${fmt(r.v)}</span></div>`).join("")}
+        </div>
+      </div>`;
+    } else {
+      const hasMoves=p.moves.length>0;
+      html+=`<div class="pstage ${hasMoves?'':'nochange'}">
+        <div class="pstage-head">
+          <span class="pno">Etape ${s.no} · ${s.date}</span>
+          <span class="pbadge ${badgeClass(s.type)}">${ic[s.type]} ${s.label}</span>
+        </div>`;
+      if(hasMoves){
+        html+=`<div class="pmoves">`+p.moves.map(m=>`
+          <div class="pmove">
+            <span class="pm-out">− ${m.out.n}</span>
+            <span class="pm-arrow">→</span>
+            <span class="pm-in">+ ${m.inn.n}</span>
+            <span class="pm-net">+${fmt(Math.round(m.net))}</span>
+          </div>`).join("")+`</div>`;
+      } else {
+        html+=`<div class="pnochange">Behold holdet</div>`;
+      }
+      html+=`<div class="pcap">Kaptajn: <b>${p.captain||"—"}</b>${capObj?` <span class="muted">(${roleLabel(capObj.role)})</span>`:""}</div>`;
+      html+=`</div>`;
+    }
+  });
+  box.innerHTML=html;
+}
+
+/* ============================================================
+   RENDER: RULES
+   ============================================================ */
+function renderRules(){
+  const rows=(obj)=>Object.entries(obj).map(([k,v])=>`<tr><td>${k}. plads</td><td>${fmt(v)} kr.</td></tr>`).join("");
+  document.getElementById("rulesBox").innerHTML = `
+   <details open><summary>Etapeplacering</summary><div class="det-body">
+     Vækst efter placering på etapen (1.–15.).<table>${rows(ETAPE_PLACERING)}</table></div></details>
+   <details><summary>Sammenlagt placering efter etapen</summary><div class="det-body">
+     <table>${rows(SAMLET)}</table></div></details>
+   <details><summary>Holdbonus</summary><div class="det-body">
+     Gives til ALLE aktive ryttere på det hold der vinder/placerer sig på etapen.
+     <table>${rows(HOLDBONUS)}</table>
+     Derfor kan en billig hjælperytter på et vinderhold pludselig stige.</div></details>
+   <details><summary>Pr. dag i trøjen</summary><div class="det-body"><table>
+     <tr><td>Førertrøjen (gul)</td><td>25.000</td></tr>
+     <tr><td>Pointtrøjen (grøn)</td><td>25.000</td></tr>
+     <tr><td>Bjergtrøjen (prikket)</td><td>25.000</td></tr>
+     <tr><td>Ungdomstrøjen (hvid)</td><td>15.000</td></tr>
+     <tr><td>Mest angrebsivrige</td><td>50.000</td></tr></table></div></details>
+   <details><summary>Spurt- og bjergpoint</summary><div class="det-body">
+     3.000 kr. pr. point. Minuspoint giver minusvækst.</div></details>
+   <details><summary>Holdtidskørsel (etape 1)</summary><div class="det-body">
+     Erstatter etapeplacering, holdbonus, sen ankomst og etapebonus den dag.
+     <table>${rows(HOLDTID)}</table>Gives til alle aktive ryttere på de placerede hold.</div></details>
+   <details><summary>Etapebonus (går i banken)</summary><div class="det-body">
+     For antal af DINE ryttere i etapens top 15:
+     <table>${Object.entries(ETAPEBONUS).sort((a,b)=>b[0]-a[0]).map(([k,v])=>`<tr><td>${k} ryttere</td><td>${fmt(v)} kr.</td></tr>`).join("")}</table>
+     8 ryttere i top 15 = 400.000 direkte i banken. Belønner bredde.</div></details>
+   <details><summary>Kaptajnbonus (går i banken)</summary><div class="det-body">
+     Kaptajnens positive vækst i runden gives én gang til (×1) direkte i banken.
+     Kun positiv. Gratis at skifte kaptajn — sæt altid den rytter du forventer mest af.</div></details>
+   <details><summary>Minusvækst</summary><div class="det-body"><table>
+     <tr><td>Sen ankomst (pr. minut)</td><td>-3.000 (max -90.000)</td></tr>
+     <tr><td>DNF (udgået på etape)</td><td>-50.000</td></tr>
+     <tr><td>DNS (pr. resterende etape)</td><td>-100.000</td></tr></table></div></details>
+   <details><summary>Transfer & finans</summary><div class="det-body"><table>
+     <tr><td>Transfergebyr (efter etape 1)</td><td>-1% af køb</td></tr>
+     <tr><td>Bankrente</td><td>+0,5%</td></tr>
+     <tr><td>Fri transfer</td><td>indtil etape 1 starter</td></tr></table>
+     Handel åbner igen ca. kl. 20.30 efter resultatvalidering. Luk handler min. 30 min før etapestart.</div></details>
+  `;
+}
+
+/* ============================================================
+   WIRING
+   ============================================================ */
+document.getElementById("prevBtn").addEventListener("click",()=>{ if(curStage>0){curStage--;renderHero();renderRec();renderWindow();}});
+document.getElementById("nextBtn").addEventListener("click",()=>{ if(curStage<STAGES.length-1){curStage++;renderHero();renderRec();renderWindow();}});
+document.querySelectorAll(".tab").forEach(t=>{
+  t.addEventListener("click",()=>{
+    document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+    document.querySelectorAll(".tabview").forEach(x=>x.classList.remove("active"));
+    t.classList.add("active");
+    document.getElementById("tab-"+t.dataset.tab).classList.add("active");
+  });
+});
+document.getElementById("winSlider").addEventListener("input",e=>{
+  windowSize=+e.target.value;
+  renderWindow(); saveState();
+  // gen-kør optimeringen så holdforslag/skift følger vinduet med det samme
+  if(squad.length>=8){
+    renderTransferAdvice(suggestTransfers(curStage,windowSize));
+  }
+  renderRec();
+});
+document.getElementById("optBtn").addEventListener("click",optimise);
+document.getElementById("clearBtn").addEventListener("click",()=>{
+  squad=[];captain=null;renderPicker();renderSquad();renderRec();saveState();
+  renderTransferAdvice(null);
+});
+
+document.getElementById("buildPlanBtn").addEventListener("click",renderSeasonPlan);
+document.getElementById("maxMovesSlider").addEventListener("input",e=>{
+  maxMovesPerStage=+e.target.value;
+  document.getElementById("maxMovesTxt").textContent=maxMovesPerStage;
+  renderSeasonPlan(); saveState();
+});
+/* rytter-profil dropdown */
+const rsel=document.getElementById("riderSelect");
+[...RIDERS].sort((a,b)=>b.v-a.v).forEach(r=>{
+  const o=document.createElement("option");
+  o.value=r.n; o.textContent=`${r.n} — ${fmt(r.v)}`;
+  rsel.appendChild(o);
+});
+rsel.addEventListener("change",e=>renderRiderProfile(e.target.value));
+
+/* ============================================================
+   PERSISTENS: holdet gemmes lokalt (localStorage) og i URL-hash,
+   så det overlever genindlæsning — vigtigt på mobil.
+   localStorage er pakket i try/catch: virker på egen hosting
+   (GitHub Pages m.m.); falder stille tilbage hvis blokeret.
+   ============================================================ */
+function saveState(){
+  const idx = squad.map(n=>RIDERS.findIndex(r=>r.n===n)).filter(i=>i>=0);
+  const capIdx = captain ? RIDERS.findIndex(r=>r.n===captain) : -1;
+  const state = {s:idx, c:capIdx, w:windowSize, m:maxMovesPerStage};
+  const enc = encodeURIComponent(JSON.stringify(state));
+  try{ localStorage.setItem("tourspillet2026", enc); }catch(e){}
+  try{ history.replaceState(null,"","#"+enc); }catch(e){}
+}
+function loadState(){
+  let enc = null;
+  if(location.hash && location.hash.length>2) enc = location.hash.slice(1);
+  if(!enc){ try{ enc = localStorage.getItem("tourspillet2026"); }catch(e){} }
+  if(!enc) return;
+  try{
+    const st = JSON.parse(decodeURIComponent(enc));
+    if(Array.isArray(st.s)) squad = st.s.map(i=>RIDERS[i]?.n).filter(Boolean);
+    if(st.c>=0 && RIDERS[st.c]) captain = RIDERS[st.c].n;
+    if(st.w>=1 && st.w<=8){ windowSize = st.w; const el=document.getElementById("winSlider"); if(el) el.value=st.w; }
+    if(st.m>=1 && st.m<=8){ maxMovesPerStage = st.m; const el=document.getElementById("maxMovesSlider"); if(el){ el.value=st.m; document.getElementById("maxMovesTxt").textContent=st.m; } }
+  }catch(e){ /* korrupt state ignoreres */ }
+}
+
+document.getElementById("pcsImportBtn").addEventListener("click",()=>{
+  const n = importPcsData(document.getElementById("pcsPaste").value);
+  const st = document.getElementById("pcsStatus");
+  if(n>0){ st.textContent = "✓ Indlæste PCS-data for "+n+" ryttere — gemt lokalt i browseren."; st.style.color="var(--green)";
+    renderRiderProfile(document.getElementById("riderSelect").value||RIDERS[0].n); }
+  else { st.textContent = "Kunne ikke læse JSON — tjek at du har kopieret hele filens indhold."; st.style.color="var(--pois)"; }
+});
+
+/* INIT */
+loadState();
+renderHero(); renderRec(); renderPicker(); renderSquad(); renderRules(); renderWindow();
+renderTransferAdvice(null);
+renderRiderProfile(RIDERS[0].n);
+renderSeasonPlan();
+</script>
+</body>
+</html>
