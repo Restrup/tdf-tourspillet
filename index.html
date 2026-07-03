@@ -291,6 +291,15 @@
 .sp-head{font-size:12px;color:var(--mut,#9a9a9a);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
 .sp-head a{color:var(--maillot,#f2c14e);text-decoration:none;font-size:11px;white-space:nowrap}
 .sp-img{width:100%;height:auto;border-radius:8px;background:#fff;display:block}
+.odds-table{border:1px solid rgba(255,255,255,.08);border-radius:10px;overflow:hidden}
+.odds-row{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid rgba(255,255,255,.06)}
+.odds-row:last-child{border-bottom:none}
+.odds-head{background:rgba(255,255,255,.04);font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut,#9a9a9a)}
+.or-nm{flex:1;min-width:0}
+.or-od{width:58px;text-align:right;font-variant-numeric:tabular-nums;color:var(--mut,#cfcfcf)}
+.or-pc{width:92px;text-align:right;font-weight:700;color:var(--maillot,#f2c14e);font-variant-numeric:tabular-nums}
+.odds-note{background:rgba(108,184,224,.10);border:1px solid rgba(108,184,224,.3);border-radius:8px;padding:12px;margin-bottom:12px;font-size:14px;line-height:1.5}
+.odds-empty{color:var(--mut,#9a9a9a);font-size:14px;padding:16px;text-align:center;border:1px dashed rgba(255,255,255,.15);border-radius:10px}
 </style>
 </head>
 <body>
@@ -318,6 +327,7 @@
     <div class="tab active" data-tab="rec">Dagens oplæg</div>
     <div class="tab" data-tab="team">Mit hold</div>
     <div class="tab" data-tab="plan">Sæsonplan</div>
+    <div class="tab" data-tab="odds">Bookmaker-odds</div>
     <div class="tab" data-tab="rider">Rytter-profil</div>
     <div class="tab" data-tab="rules">Pointsystem</div>
   </div>
@@ -411,6 +421,25 @@
   <div class="tabview" id="tab-rules">
     <div class="sec-head"><span class="n">·</span><h2>Sådan tjener ryttere værdi</h2><span class="line"></span></div>
     <div id="rulesBox"></div>
+  </div>
+
+  <!-- TAB: BOOKMAKER ODDS -->
+  <div class="tabview" id="tab-odds">
+    <div class="sec-head"><span class="n">·</span><h2>Bookmaker-favoritter · <span id="oddsStageLbl">etape 1</span></h2><span class="line"></span></div>
+    <p class="note" style="margin:-4px 0 12px">Brug Forrige/Naeste oeverst til at skifte etape. Offentlige odds — ikke bag koden.</p>
+    <div id="oddsBox"></div>
+    <details class="pcs-import" style="margin-top:14px">
+      <summary>Opdatér odds (indsæt dagens odds)</summary>
+      <div class="det-body">
+        <p style="margin-bottom:8px">Etape-vinderodds aabner typisk 1-2 dage foer hver etape. Indsæt dagens odds som JSON — samme format som agentens <b>stage_odds.json</b>:<br>
+        <code>{"5": {"Tim Merlier": 2.75, "Jasper Philipsen": 3.4}}</code><br>
+        eller med op til 3 bookmakere:<br>
+        <code>{"5": {"bookies":["Bet365","Unibet","Betfair"], "riders":[{"name":"Tim Merlier","odds":[2.75,2.6,2.8]}]}}</code></p>
+        <textarea id="oddsPaste" class="pcs-ta" placeholder='{"5": {"Tim Merlier": 2.75, ...}}'></textarea>
+        <button class="btn" id="oddsImportBtn">Indlæs odds</button>
+        <p class="note" id="oddsStatus"></p>
+      </div>
+    </details>
   </div>
 
   <footer>
@@ -1503,8 +1532,8 @@ function renderRules(){
 /* ============================================================
    WIRING
    ============================================================ */
-document.getElementById("prevBtn").addEventListener("click",()=>{ if(curStage>0){curStage--;renderHero();renderRec();renderWindow();}});
-document.getElementById("nextBtn").addEventListener("click",()=>{ if(curStage<STAGES.length-1){curStage++;renderHero();renderRec();renderWindow();}});
+document.getElementById("prevBtn").addEventListener("click",()=>{ if(curStage>0){curStage--;renderHero();renderRec();renderWindow();renderOdds();}});
+document.getElementById("nextBtn").addEventListener("click",()=>{ if(curStage<STAGES.length-1){curStage++;renderHero();renderRec();renderWindow();renderOdds();}});
 document.querySelectorAll(".tab").forEach(t=>{
   t.addEventListener("click",()=>{
     document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
@@ -1620,6 +1649,66 @@ document.querySelectorAll(".lockbtn").forEach(btn=>{
   if(inp) inp.addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); go(); } });
 });
 
+/* ============================================================
+   BOOKMAKER-ODDS pr. etape (aaben visning). Opdaterbar dagligt
+   (samme format som agentens stage_odds.json), gemmes lokalt.
+   Ingen tal er opfundet: etaper uden odds vises som ikke aabnet.
+   ============================================================ */
+let STAGE_ODDS = {
+  1: { note:"Etape 1 er en <b>holdtidskoersel</b> — bookmakerne noterer <b>hold</b>, ikke enkeltryttere. Bookmaker-favorithold: UAE Team Emirates, Team Visma | Lease a Bike og Red Bull – Bora-Hansgrohe. (Kilder: cyclingnews / idlprocycling, 3. jul 2026.)" }
+};
+function normalizeOdds(obj){
+  const out={};
+  for(const k in obj){
+    const v=obj[k]; if(!v||typeof v!=="object") continue;
+    if(Array.isArray(v.riders)){ out[k]=v; continue; }
+    if((v.note||v.updated)&&!v.riders){ out[k]=v; continue; }
+    const riders=[];
+    for(const name in v){ const o=v[name]; if(typeof o==="number"&&o>1) riders.push({name, odds:[o]}); }
+    out[k]={ riders };
+  }
+  return out;
+}
+try{ const raw=localStorage.getItem("tourspillet2026_odds"); if(raw){ const o=JSON.parse(raw); if(o&&typeof o==="object") STAGE_ODDS=Object.assign({}, STAGE_ODDS, normalizeOdds(o)); } }catch(e){}
+
+function renderOdds(){
+  const box=document.getElementById("oddsBox"); if(!box) return;
+  const s=STAGES[curStage];
+  const lbl=document.getElementById("oddsStageLbl"); if(lbl) lbl.textContent="etape "+s.no+" · "+s.label;
+  const d=STAGE_ODDS[s.no];
+  let html="";
+  if(d&&d.note) html+='<div class="odds-note">'+d.note+'</div>';
+  if(d&&Array.isArray(d.riders)&&d.riders.length){
+    const bookies=d.bookies||[];
+    const rows=d.riders.map(r=>{ const ods=(r.odds||[]).filter(x=>x>1); return {name:r.name, odds:r.odds||[], best:ods.length?Math.min.apply(null,ods):Infinity}; }).filter(r=>isFinite(r.best));
+    const sump=rows.reduce((a,r)=>a+1/r.best,0)||1;
+    rows.forEach(r=>r.p=(1/r.best)/sump);
+    rows.sort((a,b)=>a.best-b.best);
+    const head='<div class="odds-row odds-head"><span class="or-nm">Rytter</span>'+(bookies.length?bookies.map(b=>'<span class="or-od">'+b+'</span>').join(""):'<span class="or-od">Odds</span>')+'<span class="or-pc">Vinderchance</span></div>';
+    const body=rows.slice(0,10).map((r,i)=>{
+      const cells=bookies.length ? (r.odds.length?r.odds:[]).map(o=>'<span class="or-od">'+(o?o.toFixed(2):"–")+'</span>').join("") : '<span class="or-od">'+r.best.toFixed(2)+'</span>';
+      return '<div class="odds-row"><span class="or-nm"><b>'+(i+1)+'.</b> '+r.name+'</span>'+cells+'<span class="or-pc">'+(r.p*100).toFixed(0)+'%</span></div>';
+    }).join("");
+    html+='<div class="odds-table">'+head+body+'</div>';
+    html+='<p class="note">'+(d.updated?"Odds pr. "+d.updated+". ":"")+'Vinderchance = markedets implicitte sandsynlighed (bookmaker-margin fjernet).</p>';
+  } else if(!d || (!d.note && !(d.riders&&d.riders.length))){
+    html+='<div class="odds-empty">Ingen bookmaker-odds for etape '+s.no+' endnu.<br>Etape-vinderodds aabner typisk 1-2 dage foer etapen — indsæt dagens odds nederst, saa vises favoritterne her.</div>';
+  }
+  box.innerHTML=html;
+}
+document.getElementById("oddsImportBtn").addEventListener("click",function(){
+  const st=document.getElementById("oddsStatus");
+  try{
+    const obj=JSON.parse(document.getElementById("oddsPaste").value);
+    if(typeof obj!=="object"||Array.isArray(obj)) throw 0;
+    const norm=normalizeOdds(obj);
+    STAGE_ODDS=Object.assign({}, STAGE_ODDS, norm);
+    try{ localStorage.setItem("tourspillet2026_odds", JSON.stringify(STAGE_ODDS)); }catch(e){}
+    renderOdds();
+    st.textContent="✓ Odds indlæst for "+Object.keys(norm).length+" etape(r) — gemt lokalt."; st.style.color="var(--green)";
+  }catch(e){ st.textContent="Kunne ikke læse JSON — tjek formatet."; st.style.color="var(--pois)"; }
+});
+
 /* INIT */
 loadState();
 applyLock();
@@ -1627,6 +1716,7 @@ renderHero(); renderRec(); renderPicker(); renderSquad(); renderRules(); renderW
 renderTransferAdvice(null);
 renderRiderProfile(RIDERS[0].n);
 renderSeasonPlan();
+renderOdds();
 </script>
 </body>
 </html>
