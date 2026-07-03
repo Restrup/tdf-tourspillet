@@ -276,6 +276,17 @@
   .pcs-empty b{color:var(--maillot)}
   .pcs-import{margin-bottom:10px}
   .pcs-ta{width:100%;min-height:80px;background:var(--ink-soft);color:var(--paper);border:1px solid var(--line);border-radius:4px;padding:9px;font-size:11px;font-family:monospace}
+.lockgate{display:none}
+.locked>.lockgate{display:block}
+.locked>:not(.lockgate){display:none!important}
+.lockcard{background:var(--panel,#1c1c1c);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:22px;text-align:center;max-width:440px;margin:16px auto}
+.lockicon{font-size:34px;line-height:1}
+.lockttl{font-weight:700;font-size:18px;margin:8px 0 4px}
+.lockdesc{color:var(--mut,#9a9a9a);font-size:14px;margin:0 0 14px}
+.lockrow{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.lockinput{flex:1;min-width:160px;max-width:240px;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:#111;color:#fff;font-size:15px}
+.lockbtn{white-space:nowrap}
+.lockerr{color:var(--pois,#e0625a);font-size:13px;min-height:16px;margin:8px 0 0}
 </style>
 </head>
 <body>
@@ -309,6 +320,7 @@
 
   <!-- TAB: RECOMMENDATION -->
   <div class="tabview active" id="tab-rec">
+    <div class="lockgate"><div class="lockcard"><div class="lockicon">🔒</div><div class="lockttl">Låst område</div><p class="lockdesc">Optimeringshjælpen er beskyttet. Indtast koden for at låse op på denne enhed.</p><div class="lockrow"><input type="password" class="lockinput" placeholder="Kode" autocomplete="off"><button class="btn lockbtn" type="button">Lås op</button></div><p class="lockerr"></p></div></div>
     <div class="sec-head"><span class="n">A</span><h2>Bedste køb over vinduet</h2><span class="line"></span></div>
     <div id="recWinNote" class="winnote"></div>
     <div id="recList"></div>
@@ -347,8 +359,11 @@
       <p class="note">Vælg max 2 ryttere fra samme hold. Sæt kaptajn med stjernen i holdlisten. Efter etape 1 koster hver handel 1% af den købte rytters værdi.</p>
     </div>
 
-    <div class="sec-head"><span class="n">·</span><h2>Anbefalede skift</h2><span class="line"></span></div>
-    <div class="panel" id="transferBox"><p class="muted">Byg et hold og tryk "Foreslå optimalt hold / skift".</p></div>
+    <div id="transferGate">
+      <div class="lockgate"><div class="lockcard"><div class="lockicon">🔒</div><div class="lockttl">Skifteforslag er låst</div><p class="lockdesc">Indtast koden for at låse optimeringshjælpen op på denne enhed.</p><div class="lockrow"><input type="password" class="lockinput" placeholder="Kode" autocomplete="off"><button class="btn lockbtn" type="button">Lås op</button></div><p class="lockerr"></p></div></div>
+      <div class="sec-head"><span class="n">·</span><h2>Anbefalede skift</h2><span class="line"></span></div>
+      <div class="panel" id="transferBox"><p class="muted">Byg et hold og tryk "Foreslå optimalt hold / skift".</p></div>
+    </div>
 
     <div class="sec-head"><span class="n">·</span><h2>Dit hold</h2><span class="line"></span></div>
     <div class="panel" id="squadBox"><p class="muted">Ingen ryttere valgt endnu.</p></div>
@@ -356,6 +371,7 @@
 
   <!-- TAB: SEASON PLAN -->
   <div class="tabview" id="tab-plan">
+    <div class="lockgate"><div class="lockcard"><div class="lockicon">🔒</div><div class="lockttl">Låst område</div><p class="lockdesc">Optimeringshjælpen er beskyttet. Indtast koden for at låse op på denne enhed.</p><div class="lockrow"><input type="password" class="lockinput" placeholder="Kode" autocomplete="off"><button class="btn lockbtn" type="button">Lås op</button></div><p class="lockerr"></p></div></div>
     <div class="sec-head"><span class="n">·</span><h2>Rullende plan · alle 21 etaper</h2><span class="line"></span></div>
     <div class="panel" style="margin-bottom:14px">
       <p class="muted" style="margin:0 0 8px">Fuld skitse nu. Holdet rulles fra etape 1 og skifter kun hvor det betaler sig over vinduet. Planen strammes op efter hver etapes resultater.</p>
@@ -805,6 +821,7 @@ function renderHero(){
    RENDER: RECOMMENDATIONS
    ============================================================ */
 function renderRec(){
+  if(!isUnlocked()) return;   // låst: render ikke optimeringstal i DOM
   const s = STAGES[curStage];
   // Rangér efter vindue-vægtet vækst (følger slideren), men vis næste etapes EV-tal.
   const ranked = RIDERS.map(r=>({
@@ -1070,6 +1087,7 @@ function buildSeasonPlan(planWindow, maxMovesPerStage){
 }
 
 function optimise(){
+  if(!isUnlocked()){ const inp=document.querySelector('#transferGate .lockinput'); if(inp){ inp.scrollIntoView({behavior:"smooth",block:"center"}); inp.focus(); } return; }
   const n=windowSize;
   if(squad.length>=8){
     // har hold → vis konkrete skift
@@ -1092,6 +1110,7 @@ function optimise(){
 }
 
 function renderTransferAdvice(moves){
+  if(!isUnlocked()) return;   // låst: render ikke skifteforslag i DOM
   const box=document.getElementById("transferBox");
   if(!box) return;
   const win=windowStages(curStage,windowSize);
@@ -1351,6 +1370,7 @@ function renderWindow(){
    RENDER: SÆSONPLAN (kun ændringer pr. etape)
    ============================================================ */
 function renderSeasonPlan(){
+  if(!isUnlocked()) return;   // låst: render ikke planen i DOM
   const box=document.getElementById("planList");
   if(!box) return;
   const plan=buildSeasonPlan(windowSize, maxMovesPerStage);
@@ -1523,8 +1543,50 @@ document.getElementById("pcsImportBtn").addEventListener("click",()=>{
   else { st.textContent = "Kunne ikke læse JSON — tjek at du har kopieret hele filens indhold."; st.style.color="var(--pois)"; }
 });
 
+/* ============================================================
+   BLØD LÅS på optimeringshjælp (Dagens oplæg, Sæsonplan, skift).
+   Kun en SHA-256-hash af koden gemmes — koden selv ligger ikke i
+   app-koden, og optimeringstal render'es ikke i DOM når det er låst.
+   ============================================================ */
+const LOCK_HASH = "c3dfe92a34cb370994c5ed1895e5341258a9109a2edbf1a24868a7c1e99d7074";
+const LOCK_KEY = "tourspillet2026_unlock";
+const LOCK_TARGETS = ["tab-rec","tab-plan","transferGate"];
+let _unlocked = false;
+try{ _unlocked = localStorage.getItem(LOCK_KEY) === LOCK_HASH; }catch(e){}
+function isUnlocked(){ return _unlocked; }
+async function sha256Hex(s){
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+function applyLock(){
+  const locked = !isUnlocked();
+  LOCK_TARGETS.forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.toggle("locked", locked); });
+}
+async function tryUnlock(value, errEl){
+  let h=""; try{ h = await sha256Hex(value); }catch(e){}
+  if(h === LOCK_HASH){
+    _unlocked = true;
+    try{ localStorage.setItem(LOCK_KEY, LOCK_HASH); }catch(e){}
+    applyLock();
+    renderRec(); renderSeasonPlan();
+    renderTransferAdvice(squad.length>=8 ? suggestTransfers(curStage,windowSize) : null);
+    return true;
+  }
+  if(errEl) errEl.textContent = "Forkert kode — prøv igen.";
+  return false;
+}
+document.querySelectorAll(".lockbtn").forEach(btn=>{
+  const gate = btn.closest(".lockgate");
+  const inp = gate ? gate.querySelector(".lockinput") : null;
+  const err = gate ? gate.querySelector(".lockerr") : null;
+  const go = ()=>{ if(err) err.textContent=""; if(inp) tryUnlock(inp.value.trim(), err); };
+  btn.addEventListener("click", go);
+  if(inp) inp.addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); go(); } });
+});
+
 /* INIT */
 loadState();
+applyLock();
 renderHero(); renderRec(); renderPicker(); renderSquad(); renderRules(); renderWindow();
 renderTransferAdvice(null);
 renderRiderProfile(RIDERS[0].n);
