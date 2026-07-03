@@ -287,6 +287,10 @@
 .lockinput{flex:1;min-width:160px;max-width:240px;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:#111;color:#fff;font-size:15px}
 .lockbtn{white-space:nowrap}
 .lockerr{color:var(--pois,#e0625a);font-size:13px;min-height:16px;margin:8px 0 0}
+.stage-profile{margin-top:12px;border-top:1px solid rgba(255,255,255,.08);padding-top:10px}
+.sp-head{font-size:12px;color:var(--mut,#9a9a9a);text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.sp-head a{color:var(--maillot,#f2c14e);text-decoration:none;font-size:11px;white-space:nowrap}
+.sp-img{width:100%;height:auto;border-radius:8px;background:#fff;display:block}
 </style>
 </head>
 <body>
@@ -799,6 +803,37 @@ function badgeClass(type){
   if(type==="bjerg")return"b-bjerg";
   return"b-tt";
 }
+const PROFILE_URLS = {
+  1:"https://img.aso.fr/core_app/img-cycling-tdf-jpg/tdf26-profils-web-fr-e-tape-1/71083/0:0,1004:602-960-0-90/f71aa",
+  2:"https://img.aso.fr/core_app/img-cycling-tdf-jpg/2-tdf26-profils-web-fr/70964/0:0,1004:602-960-0-90/cf268",
+  3:"https://img.aso.fr/core_app/img-cycling-tdf-jpg/3-tdf26-profils-web-fr/70962/0:0,1004:602-960-0-90/55d8b",
+  4:"https://img.aso.fr/core_app/img-cycling-tdf-jpg/4-tdf26-profils-web-fr/70960/0:0,1004:602-960-0-90/6aaac",
+  5:"https://img.aso.fr/core_app/img-cycling-tdf-jpg/5-tdf26-profils-web-fr/70961/0:0,1004:602-960-0-90/9c154",
+  6:"https://img.aso.fr/core_app/img-cycling-tdf-jpg/6-tdf26-profils-web-fr/70968/0:0,1004:602-960-0-90/c69fa",
+  7:"https://img.aso.fr/core_app/img-cycling-tdf-jpg/7-tdf26-profils-web-fr/70963/0:0,1004:602-960-0-90/5d682",
+  8:"https://img.aso.fr/core_app/img-cycling-tdf-jpg/8-tdf26-profils-web-fr/70970/0:0,1004:602-960-0-90/11298",
+  9:"https://img.aso.fr/core_app/img-cycling-tdf-jpg/9-tdf26-profils-web-fr/70966/0:0,1004:602-960-0-90/96078",
+  10:"https://img.aso.fr/core_app/img-cycling-tdf-jpg/10-tdf26-profils-web-fr/70969/0:0,1004:602-960-0-90/afe2a",
+  11:"https://img.aso.fr/core_app/img-cycling-tdf-jpg/11-tdf26-profils-web-fr/70965/0:0,1004:602-960-0-90/76dd7",
+  12:"https://img.aso.fr/core_app/img-cycling-tdf-jpg/12-tdf26-profils-web-fr/70971/0:0,1004:602-960-0-90/413dc",
+  13:"https://img.aso.fr/core_app/img-cycling-tdf-jpg/13-tdf26-profils-web-fr/70973/0:0,1004:602-960-0-90/bf2e6",
+  14:"https://img.aso.fr/core_app/img-cycling-tdf-jpg/14-tdf26-profils-web-fr/70972/0:0,1004:602-960-0-90/2c309",
+  15:"https://img.aso.fr/core_app/img-cycling-tdf-jpg/15-tdf26-profils-web-fr/70976/0:0,1004:602-960-0-90/7345e",
+  16:"https://img.aso.fr/core_app/img-cycling-tdf-jpg/16-tdf26-profils-web-fr/70974/0:0,1004:602-960-0-90/e8ad8",
+  17:"https://img.aso.fr/core_app/img-cycling-tdf-jpg/17-tdf26-profils-web-fr/70979/0:0,1004:602-960-0-90/e7e70",
+  18:"https://img.aso.fr/core_app/img-cycling-tdf-jpg/18-tdf26-profils-web-fr/70977/0:0,1004:602-960-0-90/970be",
+  19:"https://img.aso.fr/core_app/img-cycling-tdf-jpg/19-tdf26-profils-web-fr/70975/0:0,1004:602-960-0-90/5575d",
+  20:"https://img.aso.fr/core_app/img-cycling-tdf-jpg/20-tdf26-profils-web-fr/70978/0:0,1004:602-960-0-90/a780c",
+  21:"https://img.aso.fr/core_app/img-cycling-tdf-jpg/tdf26-profils-web-fr-e-tape-21/71082/0:0,1004:602-960-0-90/f1fe2"
+};
+function profileHTML(s){
+  const u = PROFILE_URLS[s.no];
+  if(!u) return "";
+  return `<div class="stage-profile">
+      <div class="sp-head"><span>Etapeprofil · kategoriserede stigninger</span><a href="https://www.letour.fr/en/stage-${s.no}" target="_blank" rel="noopener">letour.fr ↗</a></div>
+      <img class="sp-img" src="${u}" alt="Højdeprofil etape ${s.no}" onerror="this.closest('.stage-profile').style.display='none'">
+    </div>`;
+}
 function renderHero(){
   const s = STAGES[curStage];
   document.getElementById("hero").innerHTML = `
@@ -811,6 +846,7 @@ function renderHero(){
       <span class="badge ${badgeClass(s.type)}">${s.label}</span>
     </div>
     <div class="verdict">${s.note}</div>
+    ${profileHTML(s)}
   `;
   document.getElementById("prevBtn").disabled = curStage===0;
   document.getElementById("nextBtn").disabled = curStage===STAGES.length-1;
