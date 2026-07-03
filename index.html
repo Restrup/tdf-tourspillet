@@ -374,10 +374,11 @@
   <div class="tabview" id="tab-rider">
     <div class="sec-head"><span class="n">·</span><h2>Vælg rytter</h2><span class="line"></span></div>
     <select id="riderSelect" class="rsel"></select>
+    <p class="pcs-builtin" style="background:rgba(120,190,120,.12);border:1px solid rgba(120,190,120,.4);color:var(--green,#7ec97e);border-radius:8px;padding:10px 12px;margin:8px 0;font-size:14px">✓ ProCyclingStats-data for alle 184 ryttere er indbygget i appen — specialty-profil, form og sæsonstatistik vises automatisk nedenfor. Du behøver ikke indlæse noget.</p>
     <details class="pcs-import">
-      <summary>Indlæs / opdatér ProCyclingStats-data</summary>
+      <summary>Avanceret: opdatér ProCyclingStats-data manuelt (valgfrit)</summary>
       <div class="det-body">
-        <p style="margin-bottom:8px">Kør <b>fetch_pcs.py</b> i Claude Code (henter specialty-points, form og sæsonstatistik for alle 184 ryttere), åbn <b>pcs_specialties.json</b> og indsæt indholdet her:</p>
+        <p style="margin-bottom:8px">Dataene er allerede med i appen. Kun hvis du vil <b>opdatere</b> tallene selv (fx efter hviledagene): kør <b>fetch_pcs.py</b>, åbn <b>pcs_specialties.json</b> og indsæt indholdet her.</p>
         <textarea id="pcsPaste" class="pcs-ta" placeholder='{"Tadej Pogačar": {"sprint": 360, "climber": 10122, ...}, ...}'></textarea>
         <button class="btn" id="pcsImportBtn">Indlæs PCS-data</button>
         <p class="note" id="pcsStatus"></p>
