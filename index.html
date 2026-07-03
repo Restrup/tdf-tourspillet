@@ -429,9 +429,9 @@
     <p class="note" style="margin:-4px 0 12px">Brug Forrige/Naeste oeverst til at skifte etape. Offentlige odds — ikke bag koden.</p>
     <div id="oddsBox"></div>
     <details class="pcs-import" style="margin-top:14px">
-      <summary>Opdatér odds (indsæt dagens odds)</summary>
+      <summary>Avanceret: opdatér odds manuelt (valgfrit)</summary>
       <div class="det-body">
-        <p style="margin-bottom:8px">Etape-vinderodds aabner typisk 1-2 dage foer hver etape. Indsæt dagens odds som JSON — samme format som agentens <b>stage_odds.json</b>:<br>
+        <p style="margin-bottom:8px">Appen henter automatisk dagens odds fra <b>stage_odds.json</b> i repoet — morgen-agenten opdaterer den. Manuel indsætning her er kun en nødløsning (gemmes lokalt på denne enhed). Format:<br>
         <code>{"5": {"Tim Merlier": 2.75, "Jasper Philipsen": 3.4}}</code><br>
         eller med op til 3 bookmakere:<br>
         <code>{"5": {"bookies":["Bet365","Unibet","Betfair"], "riders":[{"name":"Tim Merlier","odds":[2.75,2.6,2.8]}]}}</code></p>
@@ -1670,6 +1670,11 @@ function normalizeOdds(obj){
   return out;
 }
 try{ const raw=localStorage.getItem("tourspillet2026_odds"); if(raw){ const o=JSON.parse(raw); if(o&&typeof o==="object") STAGE_ODDS=Object.assign({}, STAGE_ODDS, normalizeOdds(o)); } }catch(e){}
+// Auto-hent dagens odds fra repoet (skrives af morgen-agenten). Vinder over lokalt gemt.
+fetch("stage_odds.json",{cache:"no-store"})
+  .then(r=>r.ok?r.json():null)
+  .then(o=>{ if(o&&typeof o==="object"&&Object.keys(o).length){ STAGE_ODDS=Object.assign({}, STAGE_ODDS, normalizeOdds(o)); renderOdds(); } })
+  .catch(()=>{});
 
 function renderOdds(){
   const box=document.getElementById("oddsBox"); if(!box) return;
