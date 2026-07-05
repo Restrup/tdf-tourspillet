@@ -1,1 +1,16 @@
-{}
+{
+ "2": {
+  "bookies": ["WSB", "Betfred"],
+  "updated": "5. jul (formiddag)",
+  "riders": [
+   {"name": "Tadej Pogačar", "odds": [1.73, 1.91]},
+   {"name": "Mathieu van der Poel", "odds": [5.5, 5.5]},
+   {"name": "Mathias Vacek", "odds": [17.0, 17.0]},
+   {"name": "Remco Evenepoel", "odds": [17.0, 17.0]},
+   {"name": "Isaac Del Toro", "odds": [19.0, 17.0]},
+   {"name": "Jonas Vingegaard", "odds": [null, 17.0]},
+   {"name": "Romain Gregoire", "odds": [null, 17.0]},
+   {"name": "Paul Seixas", "odds": [null, 19.0]}
+  ]
+ }
+}
