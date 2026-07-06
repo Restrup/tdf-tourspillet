@@ -12,5 +12,21 @@
    {"name": "Romain Gregoire", "odds": [null, null, 17.00]},
    {"name": "Paul Seixas", "odds": [null, null, 19.00]}
   ]
+ },
+ "3": {
+  "bookies": ["Bet365"],
+  "updated": "06. jul morgen (Racing Post)",
+  "riders": [
+   {"name": "Tadej Pogačar", "odds": [1.83]},
+   {"name": "Isaac Del Toro", "odds": [11.00]},
+   {"name": "Mathieu van der Poel", "odds": [11.00]},
+   {"name": "Remco Evenepoel", "odds": [15.00]},
+   {"name": "Romain Gregoire", "odds": [19.00]},
+   {"name": "Jonas Vingegaard", "odds": [21.00]},
+   {"name": "Ben Healy", "odds": [34.00]},
+   {"name": "Michael Storer", "odds": [251.00]},
+   {"name": "Valentin Paret-Peintre", "odds": [251.00]},
+   {"name": "Magnus Cort", "odds": [251.00]}
+  ]
  }
 }

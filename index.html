@@ -126,6 +126,8 @@
   }
   .fav-star{color:var(--pois);font-size:13px;margin-left:5px;vertical-align:middle}
   .pop-tag{font-size:10px;color:var(--mut);margin-top:2px;white-space:nowrap}
+  .odds-pill{font-size:10px;font-weight:700;color:var(--green);border:1px solid var(--green);border-radius:4px;padding:0 5px;margin-left:6px;vertical-align:middle}
+  .intel-note{font-size:10.5px;color:var(--maillot);opacity:.85;margin-top:3px;line-height:1.35}
   .ppop{font-size:11px;color:var(--mut);width:44px;text-align:right;flex-shrink:0}
   .winnote{font-size:12px;color:var(--paper-dim);margin-bottom:10px;padding:8px 10px;background:var(--ink-soft);border-radius:4px;border-left:3px solid var(--maillot)}
   .winnote b{color:var(--maillot)}
@@ -727,9 +729,14 @@ const HOLDTID = {1:200000,2:150000,3:100000,4:50000,5:25000};
 const ETAPEBONUS = {8:400000,7:220000,6:120000,5:65000,4:35000,3:15000,2:8000,1:4000};
 
 /* ============================================================
-   EV-MOTOR: forventet vækst for rytter på given etapetype
-   Heuristik baseret på rolle-match + pointsystem.
-   Returnerer estimeret kr-vækst (forventningsværdi).
+   EV-MOTOR 2.0: odds-drevet forventet vækst (kr.) pr. etape.
+   Signalkæde: bookmaker-odds (stage_odds.json) er det PRIMÆRE
+   signal for vinderchance → PCS-form, favoritlister og dagens
+   intel fra nyheder/interviews (rider_intel.json) justerer →
+   pointsystemet omsætter sandsynlighed til kr.: etapeplacering
+   1.-15., løbende sammenlagt-udbetaling, holdbonus til hele
+   vinderholdet, spurt-/bjergpoint (3.000/pt), etapebonus-bidrag
+   og tidsstraf (-3.000/min) for ryttere der sættes.
    ============================================================ */
 /* Holdtidskørsel: bookmaker-lag (odds, juli 2026). Vækst rammer ALLE på
    holdet ens, så HOLDETS styrke afgør — ikke rytterens egen rolle. */
@@ -765,25 +772,168 @@ function roleFit(rider, type){
 function quality(rider){
   return 0.55 + 0.45 * (rider.v / 17000000);
 }
-function expectedGrowth(rider, stage){
-  const fit = roleFit(rider, stage.type);
-  const q = quality(rider);
-  // basisforventning: sandsynlighed for topplacering * typisk udbetaling
-  // skaleret så tal ligner realistisk etapevækst (0 - ~250ك)
-  let base;
-  if(stage.type==="tt_hold"){
-    // holdtid: alle på holdet får samme vækst — billig hjælper = stjerne her
-    base = fit * 190000;
+/* --- Dagens intel: nyheder/interviews pr. etape (rider_intel.json,
+       skrives af morgen-agenten). boost >1 = går efter etapen,
+       boost <1 = ude af form/andre planer. Kun kildebelagte udsagn. --- */
+let RIDER_INTEL = {};   // {etapeNr:{updated,sources,riders:{navn:{boost,note}}}}
+function intelFor(name,stageNo){ const st=RIDER_INTEL[stageNo]; return (st&&st.riders&&st.riders[name])||null; }
+function intelBoost(name,stageNo){ const it=intelFor(name,stageNo); return (it&&it.boost!=null)?Math.max(0.3,Math.min(2.5,it.boost)):1; }
+
+/* --- PCS-form (point seneste 10 uger) → multiplikator 0.85-1.30 --- */
+function formMult(name){
+  const d=PCS_DATA[name]; if(!d||d._form==null) return 1;
+  const norm=Math.sqrt(Math.max(0,d._form))/((PCS_MAX&&PCS_MAX._form)||1);
+  return 0.85 + 0.45*Math.min(1,norm);
+}
+
+/* --- heuristisk etapestyrke: fallback uden odds + residual-masse --- */
+function heurW(rider,stage){
+  const fit=roleFit(rider,stage.type);
+  let w=fit*fit*quality(rider);
+  if(isFav(rider.n,stage)) w*=1.5;
+  return w*formMult(rider.n)*intelBoost(rider.n,stage.no);
+}
+
+/* --- bedste bookmaker-odds for rytter på etape (til visning) --- */
+function bestOddsFor(name,stageNo){
+  const d=STAGE_ODDS[stageNo]; if(!d||!Array.isArray(d.riders)) return null;
+  const r=d.riders.find(x=>x.name===name); if(!r) return null;
+  const os=(r.odds||[]).filter(x=>x>1);
+  return os.length?Math.min.apply(null,os):null;
+}
+
+/* --- etape-kontekst: vinderchancer + hold-podium, cachet pr. etape.
+       Med odds: implicit sandsynlighed (margin fjernet), odds-listen
+       får ODDS_COVERAGE af massen, resten fordeles heuristisk.
+       Uden odds: ren heuristik (rolle-fit, kvalitet, form, intel). --- */
+const ODDS_COVERAGE=0.85;
+let _evCache={};
+function bumpEv(){ _evCache={}; }
+function stageCtx(stage){
+  if(_evCache[stage.no]) return _evCache[stage.no];
+  const heur={}; let heurSum=0;
+  RIDERS.forEach(r=>{ const w=heurW(r,stage); heur[r.n]=w; heurSum+=w; });
+  heurSum=heurSum||1;
+  const probs={};
+  const d=STAGE_ODDS[stage.no];
+  let rows=[];
+  if(d&&Array.isArray(d.riders))
+    rows=d.riders.map(r=>{ const os=(r.odds||[]).filter(x=>x>1); return {name:r.name,best:os.length?Math.min.apply(null,os):null}; })
+                 .filter(r=>r.best&&RIDERS.some(x=>x.n===r.name));
+  const hasOdds=rows.length>=3;
+  if(hasOdds){
+    const s=rows.reduce((a,r)=>a+1/r.best,0);
+    const listed=new Set(rows.map(r=>r.name));
+    let adjSum=0;
+    const adj=rows.map(r=>{
+      let p=(1/r.best)/s;
+      p*=1+0.35*(intelBoost(r.name,stage.no)-1);   // intel justerer forsigtigt oven på markedet
+      adjSum+=p; return {n:r.name,p};
+    });
+    adj.forEach(x=>probs[x.n]=ODDS_COVERAGE*x.p/adjSum);
+    let restSum=0; RIDERS.forEach(r=>{ if(!listed.has(r.n)) restSum+=heur[r.n]; });
+    restSum=restSum||1;
+    RIDERS.forEach(r=>{ if(!listed.has(r.n)) probs[r.n]=(1-ODDS_COVERAGE)*heur[r.n]/restSum; });
   } else {
-    base = fit*fit * q * 230000;       // kvadreret fit → spidsere top
-    // trøje/klassement-bonus for GC på bjergdage
-    if(stage.type==="bjerg" && (rider.role==="gc")) base += 35000;
-    // sprintpoint-bonus til sprintere på flade
-    if(stage.type==="flad" && rider.role==="sprint") base += 25000;
+    RIDERS.forEach(r=>probs[r.n]=heur[r.n]/heurSum);
   }
-  // verificeret favorit (PCS/Cyclingnews) → reelt løft i forventning
-  if(typeof isFav==="function" && isFav(rider.n,stage)) base *= 1.18;
-  return Math.round(base);
+  // hold-podium: P(holdet tager 1./2./3.) — grundlag for holdbonus til ALLE på holdet
+  const team={};
+  RIDERS.forEach(r=>{
+    const p=probs[r.n]||0;
+    const o=team[r.t]||(team[r.t]={p1:0,p2:0,p3:0});
+    o.p1+=p; o.p2+=p*(1-p); o.p3+=p*(1-p)*(1-p);
+  });
+  for(const t in team){ team[t].p1=Math.min(1,team[t].p1); team[t].p2=Math.min(1,team[t].p2); team[t].p3=Math.min(1,team[t].p3); }
+  const ctx={probs,heur,heurSum,team,hasOdds};
+  _evCache[stage.no]=ctx;
+  return ctx;
+}
+
+/* --- placeringsfordeling: geometrisk ud fra vinderchance --- */
+const DEPTH_POT=(()=>{ let s=0; for(let k=4;k<=15;k++) s+=ETAPE_PLACERING[k]; return s; })();
+function pPlace(p,k){ return p*Math.pow(1-p,k-1); }
+function pTopK(p,k){ return 1-Math.pow(1-p,k); }
+function geomPlacementEV(p){
+  if(p<=0) return 0;
+  let ev=0,surv=1;
+  for(let k=1;k<=15;k++){ ev+=surv*p*ETAPE_PLACERING[k]; surv*=1-p; }
+  return ev;
+}
+
+/* --- løbende sammenlagt-udbetaling (SAMLET betales efter HVER etape) --- */
+function gcEV(rider){
+  const i=FAVS.gc_top.indexOf(rider.n);
+  if(i<0) return 0;
+  return (SAMLET[i+1]||0)*0.8;   // dæmpet: GC-placering er ikke garanteret
+}
+
+/* --- spurt-/bjergpoint: 3.000 kr. pr. point --- */
+function pointsEV(rider,stage,p,share){
+  const roles=[rider.role].concat(rider.sub||[]);
+  if(stage.type==="flad"){
+    if(!roles.includes("sprint")) return 0;
+    // mål + mellemspurt: vinderen høster ~58 pt, dybt felt får småpoint
+    const pts=pPlace(p,1)*58+pPlace(p,2)*34+pPlace(p,3)*22+(pTopK(p,15)-pTopK(p,3))*9;
+    return pts*SPURT_BJERG_PR_POINT;
+  }
+  if(stage.type==="bakket"){
+    const pts=pPlace(p,1)*30+pPlace(p,2)*18+pPlace(p,3)*12;
+    return pts*SPURT_BJERG_PR_POINT;
+  }
+  if(stage.type==="bjerg"){
+    const pool=Math.min(90,(stage.climb||3000)/55);        // KOM-point i spil den dag
+    const komFit=Math.max(roleFit(rider,"bjerg")-0.35,0);   // kun reelle klatrere høster
+    const kom=pool*share*3*komFit;
+    const fin=pPlace(p,1)*20+pPlace(p,2)*15+pPlace(p,3)*12;
+    return (kom+fin)*SPURT_BJERG_PR_POINT;
+  }
+  return 0;
+}
+
+/* --- trøjedage: småt men dagligt (gul/hvid, grøn, prikker/angreb) --- */
+function jerseyEV(rider,stage){
+  let ev=0;
+  if(FAVS.gc_top.indexOf(rider.n)>=0&&(stage.type==="bjerg"||stage.type==="tt_individuel")) ev+=15000;
+  const si=FAVS.sprint.indexOf(rider.n);
+  if(stage.type==="flad"&&rider.role==="sprint"&&si>=0&&si<5) ev+=10000;
+  if(stage.type==="bjerg"&&FAVS.klatrer_break.indexOf(rider.n)>=0) ev+=8000;
+  return ev;
+}
+
+/* --- sen ankomst: -3.000/min (max -90.000) når rytteren sættes.
+       Odds-favoritter taber ikke tid uanset rolle (p*4-gulvet). --- */
+function latePenaltyEV(rider,stage,p){
+  const fit=Math.max(roleFit(rider,stage.type),Math.min(1,p*4));
+  let mins=0;
+  if(stage.type==="bjerg") mins=(1-fit)*20;
+  else if(stage.type==="bakket") mins=(1-fit)*8;
+  else if(stage.type==="flad") mins=(1-fit)*2;
+  else if(stage.type==="tt_individuel") mins=(1-fit)*6;
+  return Math.min(90000,mins*3000);
+}
+
+function expectedGrowth(rider, stage){
+  // Holdtid: alle på holdet får samme vækst — kun holdets styrke tæller
+  if(stage.type==="tt_hold"){
+    return Math.round((TTT_TIERS[rider.t] ?? TTT_DEFAULT)*190000);
+  }
+  const ctx=stageCtx(stage);
+  const p=ctx.probs[rider.n]||0;                     // vinderchance (odds-drevet)
+  const share=(ctx.heur[rider.n]||0)/ctx.heurSum;    // heuristisk andel af etapestyrken
+  let ev=geomPlacementEV(p);                         // etapeplacering 1.-15. (toppen)
+  // dybde: 4.-15.-pladserne fordeles efter etapestyrke (ryttere der "bare er der")
+  const depthSlots=Math.min(0.9,12*share*(1-pTopK(p,3))*0.75);
+  ev+=depthSlots*(DEPTH_POT/12);
+  // holdbonus: hele holdet belønnes når holdet tager 1./2./3. (60/30/20k)
+  const tp=ctx.team[rider.t];
+  if(tp) ev+=tp.p1*HOLDBONUS[1]+tp.p2*HOLDBONUS[2]+tp.p3*HOLDBONUS[3];
+  ev+=pointsEV(rider,stage,p,share);                 // spurt-/bjergpoint
+  ev+=jerseyEV(rider,stage);                         // trøjedage
+  ev+=gcEV(rider);                                   // løbende sammenlagt-udbetaling
+  ev+=Math.min(0.97,pTopK(p,15)+depthSlots)*12000;   // bidrag til etapebonus (top 15)
+  ev-=latePenaltyEV(rider,stage,p);                  // sen ankomst: -3.000/min
+  return Math.round(ev);
 }
 function evClass(ev){ return ev>=120000?"hi":ev>=55000?"mid":"lo"; }
 
@@ -813,6 +963,7 @@ function rolePillClass(r){
   return {sprint:"r-sprint",klatrer:"r-klatrer",puncheur:"r-puncheur",gc:"r-gc",tt:"r-tt",rouleur:"r-rouleur"}[r]||"";
 }
 function fmt(n){ return n.toLocaleString("da-DK"); }
+function fmtEv(n){ n=Math.round(n); return (n>=0?"+":"")+fmt(n); }
 
 /* ============================================================
    STATE
@@ -902,20 +1053,24 @@ function renderRec(){
   if(rwn) rwn.innerHTML = windowSize>1
     ? `Rangeret over ${windowSize} etaper: <b>${win.map(s=>"E"+s.no).join(" · ")}</b> (nærmeste vejer tungest). Justér vinduet under "Mit hold".`
     : `Rangeret kun efter næste etape (E${win[0].no}). Justér vinduet under "Mit hold".`;
-  document.getElementById("recList").innerHTML = top.map((r,i)=>`
+  document.getElementById("recList").innerHTML = top.map((r,i)=>{
+    const od=bestOddsFor(r.n,s.no);
+    const it=intelFor(r.n,s.no);
+    return `
     <div class="rider">
       <div class="rank">${i+1}</div>
       <div class="body">
-        <div class="nm">${r.n}${isFav(r.n,s)?'<span class="fav-star" title="Favorit ifølge ProCyclingStats/Cyclingnews">★</span>':''}<span class="role-pill ${rolePillClass(r.role)}">${roleLabel(r.role)}</span></div>
+        <div class="nm">${r.n}${isFav(r.n,s)?'<span class="fav-star" title="Favorit ifølge ProCyclingStats/Cyclingnews">★</span>':''}<span class="role-pill ${rolePillClass(r.role)}">${roleLabel(r.role)}</span>${od?'<span class="odds-pill" title="Bedste bookmaker-odds i dag">'+od.toFixed(2)+'</span>':''}</div>
         <div class="tm">${r.t}</div>
+        ${it&&it.note?'<div class="intel-note">⚡ '+it.note+'</div>':''}
       </div>
       <div class="right">
         <div class="val">${fmt(r.v)}</div>
-        <div class="ev ${evClass(r.wg)}">~+${fmt(r.wg)} vindue</div>
+        <div class="ev ${evClass(r.wg)}">~${fmtEv(r.wg)} vindue</div>
         <div class="pop-tag">${r.pop!=null?r.pop.toFixed(1)+'% har ham':''}</div>
       </div>
     </div>
-  `).join("");
+  `;}).join("");
 
   // captain = højeste EV blandt valgt squad hvis muligt, ellers top rytter
   let capPool = squad.length ? RIDERS.filter(r=>squad.includes(r.n)) : RIDERS;
@@ -928,7 +1083,7 @@ function renderRec(){
         <div class="nm">${cap.n}</div>
         <div class="why">Højeste forventede vækst ${squad.length?"på dit hold ":""}til denne etapetype. Kaptajnbonus fordobler effektivt rytterens positive vækst (går i banken). Gratis at skifte — gør det hver dag.</div>
       </div>
-      <div class="right"><div class="ev ${evClass(cap.ev)}">~+${fmt(cap.ev)}</div></div>
+      <div class="right"><div class="ev ${evClass(cap.ev)}">~${fmtEv(cap.ev)}</div></div>
     </div>`;
 
   const tips = {
@@ -939,7 +1094,8 @@ function renderRec(){
     tt_hold:"Holdtidskørsel: ALLE på de bedste hold får værdi. Fri transfer endnu (etape 1) — vælg fra de stærkeste tidsløbshold uden at betale gebyr."
   };
   document.getElementById("recNote").innerHTML =
-    `<b style="color:var(--maillot)">Strategi:</b> ${tips[s.type]||""} Husk 1% transfergebyr på køb efter etape 1 — et skift skal kunne tjene gebyret hjem i forventet vækst.`;
+    `<b style="color:var(--maillot)">Strategi:</b> ${tips[s.type]||""} Husk 1% transfergebyr på køb efter etape 1 — et skift skal kunne tjene gebyret hjem i forventet vækst.
+     <br><span class="muted" style="font-size:11px">Model: ${stageCtx(s).hasOdds?'bookmaker-odds styrer vinderchancerne':'ingen odds for etapen endnu — profil/form-heuristik'} · PCS-form og dagens intel justerer · kr. beregnes efter pointsystemet (placering 1-15, holdbonus, spurt/bjergpoint, sammenlagt, tidsstraf).</span>`;
 }
 
 /* ============================================================
@@ -1194,13 +1350,13 @@ function renderTransferAdvice(moves){
       <div class="move-out">
         <span class="tag-out">UD</span>
         <span class="mn">${m.out.n}</span>
-        <span class="mwg">~+${fmt(m.out.wg)}</span>
+        <span class="mwg">~${fmtEv(m.out.wg)}</span>
       </div>
       <div class="move-arrow">↓</div>
       <div class="move-in">
         <span class="tag-in">IND</span>
         <span class="mn">${m.inn.n}</span>
-        <span class="mwg">~+${fmt(m.inn.wg)}</span>
+        <span class="mwg">~${fmtEv(m.inn.wg)}</span>
       </div>
       <div class="move-net">Netto efter gebyr (${fmt(Math.round(m.fee))}): <b>+${fmt(Math.round(m.net))}</b></div>
     </div>`).join("")+
@@ -1604,6 +1760,7 @@ document.getElementById("pcsImportBtn").addEventListener("click",()=>{
   const n = importPcsData(document.getElementById("pcsPaste").value);
   const st = document.getElementById("pcsStatus");
   if(n>0){ st.textContent = "✓ Indlæste PCS-data for "+n+" ryttere — gemt lokalt i browseren."; st.style.color="var(--green)";
+    bumpEv(); renderRec();
     renderRiderProfile(document.getElementById("riderSelect").value||RIDERS[0].n); }
   else { st.textContent = "Kunne ikke læse JSON — tjek at du har kopieret hele filens indhold."; st.style.color="var(--pois)"; }
 });
@@ -1673,7 +1830,12 @@ try{ const raw=localStorage.getItem("tourspillet2026_odds"); if(raw){ const o=JS
 // Auto-hent dagens odds fra repoet (skrives af morgen-agenten). Vinder over lokalt gemt.
 fetch("stage_odds.json",{cache:"no-store"})
   .then(r=>r.ok?r.json():null)
-  .then(o=>{ if(o&&typeof o==="object"&&Object.keys(o).length){ STAGE_ODDS=Object.assign({}, STAGE_ODDS, normalizeOdds(o)); renderOdds(); } })
+  .then(o=>{ if(o&&typeof o==="object"&&Object.keys(o).length){ STAGE_ODDS=Object.assign({}, STAGE_ODDS, normalizeOdds(o)); bumpEv(); renderOdds(); renderRec(); } })
+  .catch(()=>{});
+// Dagens intel (nyheder/interviews) — skrives af morgen-agenten. Justerer EV-motoren.
+fetch("rider_intel.json",{cache:"no-store"})
+  .then(r=>r.ok?r.json():null)
+  .then(o=>{ if(o&&typeof o==="object"&&Object.keys(o).length){ RIDER_INTEL=o; bumpEv(); renderOdds(); renderRec(); } })
   .catch(()=>{});
 
 function renderOdds(){
@@ -1699,6 +1861,17 @@ function renderOdds(){
   } else if(!d || (!d.note && !(d.riders&&d.riders.length))){
     html+='<div class="odds-empty">Ingen bookmaker-odds for etape '+s.no+' endnu.<br>Etape-vinderodds aabner typisk 1-2 dage foer etapen — indsæt dagens odds nederst, saa vises favoritterne her.</div>';
   }
+  // Dagens intel: nyheder/interviews der justerer EV-motoren
+  const it=RIDER_INTEL[s.no];
+  if(it&&it.riders&&Object.keys(it.riders).length){
+    html+='<div class="odds-note" style="margin-top:10px"><b>Dagens intel</b> — nyheder/interviews'+(it.updated?' · '+it.updated:'')+'<br>'+
+      Object.keys(it.riders).map(function(n){
+        const x=it.riders[n];
+        const pct=x.boost!=null?Math.round((x.boost-1)*100):null;
+        return '⚡ <b>'+n+'</b>'+(pct!=null?' <span style="color:'+(pct>=0?'var(--green)':'var(--pois)')+'">'+(pct>=0?'+':'')+pct+'%</span>':'')+(x.note?' — '+x.note:'');
+      }).join('<br>')+
+      (it.sources&&it.sources.length?'<br><span style="opacity:.65;font-size:10.5px">Kilder: '+it.sources.join(' · ')+'</span>':'')+'</div>';
+  }
   box.innerHTML=html;
 }
 document.getElementById("oddsImportBtn").addEventListener("click",function(){
@@ -1709,8 +1882,8 @@ document.getElementById("oddsImportBtn").addEventListener("click",function(){
     const norm=normalizeOdds(obj);
     STAGE_ODDS=Object.assign({}, STAGE_ODDS, norm);
     try{ localStorage.setItem("tourspillet2026_odds", JSON.stringify(STAGE_ODDS)); }catch(e){}
-    renderOdds();
-    st.textContent="✓ Odds indlæst for "+Object.keys(norm).length+" etape(r) — gemt lokalt."; st.style.color="var(--green)";
+    bumpEv(); renderOdds(); renderRec();
+    st.textContent="✓ Odds indlæst for "+Object.keys(norm).length+" etape(r) — gemt lokalt og indregnet i EV-motoren."; st.style.color="var(--green)";
   }catch(e){ st.textContent="Kunne ikke læse JSON — tjek formatet."; st.style.color="var(--pois)"; }
 });
 

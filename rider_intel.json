@@ -1,0 +1,15 @@
+{
+ "3": {
+  "updated": "06. jul (morgen)",
+  "sources": ["Racing Post etape 3-preview", "ProCyclingUK etape 3-preview", "cyclinguptodate E2-referat"],
+  "riders": {
+   "Ben Healy": {"boost": 1.7, "note": "Racing Posts toptip til udbruddet: 'terræn han trives på' — vandt tilsvarende etape i 2025 efter 156 km i udbrud."},
+   "Michael Storer": {"boost": 1.6, "note": "Tabte bevidst 13+ min på E2 → fri rolle, jagter etapesejre fra udbrud (Racing Post). 3'er bag Healy på tilsvarende etape sidste år."},
+   "Valentin Paret-Peintre": {"boost": 1.35, "note": "Nævnt af Racing Post som udbrudskandidat med bjergmeritter fra tidligere Tours."},
+   "Magnus Cort": {"boost": 1.3, "note": "Racing Post nævner ham som udbrudskandidat på dagens profil."},
+   "Isaac Del Toro": {"boost": 1.2, "note": "E2-vinder i storform; UAE kan spille ham igen hvis Pogačar dækker af."},
+   "Tadej Pogačar": {"boost": 1.1, "note": "UAE dominerede E2-finalen; kort stejl afslutning ved Les Angles passer ham."},
+   "Kevin Vauquelin": {"boost": 0.55, "note": "Ude af form: tabte tid på E2 uden at være med fremme."}
+  }
+ }
+}
