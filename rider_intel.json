@@ -11,5 +11,16 @@
    "Tadej Pogačar": {"boost": 1.1, "note": "UAE dominerede E2-finalen; kort stejl afslutning ved Les Angles passer ham."},
    "Kevin Vauquelin": {"boost": 0.55, "note": "Ude af form: tabte tid på E2 uden at være med fremme."}
   }
+ },
+ "4": {
+  "updated": "07. jul (morgen)",
+  "sources": ["Racing Post etape 4-preview", "cyclinguptodate etape 4-preview", "cyclingstage E3-resultat"],
+  "riders": {
+   "Romain Gregoire": {"boost": 1.6, "note": "Racing Posts toptip (each-way 20-1): 7'er på E2, tre top-5 på bakkede etaper i sidste års Tour, stærk i Tour of Britain."},
+   "Alex Baudin": {"boost": 1.4, "note": "Erobrede prikketrøjen i E3-udbruddet — jagter KOM-point i udbrud igen i dag."},
+   "Ben Healy": {"boost": 1.4, "note": "cyclinguptodate: terrænet passer udbrudsryttere som Healy; udbrudschance ~60/40."},
+   "Quinn Simmons": {"boost": 1.35, "note": "cyclinguptodate nævner ham som oplagt udbrudskort på dagens terræn."},
+   "Mads Pedersen": {"boost": 1.1, "note": "Bookmaker-favorit: kan overleve de to kat. 2-stigninger og spurte fra reduceret felt."}
+  }
  }
 }

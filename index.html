@@ -697,7 +697,9 @@ const STAGES = [
    favoritter i dagens oplæg, ud over den rene EV-rang.
    ============================================================ */
 const FAVS = {
-  gc_top:        ["Tadej Pogačar","Jonas Vingegaard","Remco Evenepoel","Florian Lipowitz","Paul Seixas","Isaac Del Toro","Juan Ayuso"],
+  // = AKTUEL GC-top-10 (efter E3). Rækkefølgen styrer den løbende
+  // sammenlagt-udbetaling i EV-motoren — opdatér efter hver etape.
+  gc_top:        ["Tadej Pogačar","Jonas Vingegaard","Remco Evenepoel","Isaac Del Toro","Juan Ayuso","Paul Seixas","Florian Lipowitz","Lenny Martinez","Tobias Halland Johannessen","Ilan van Wilder"],
   sprint:        ["Tim Merlier","Jasper Philipsen","Olav Kooij","Biniam Girmay","Arnaud De Lie","Mads Pedersen","Pascal Ackermann","Pavel Bittner","Milan Fretin","Søren Wærenskjold","Phil Bauhaus","Fernando Gaviria Rendon","Arvid de Kleijn"],
   puncheur_hilly:["Mathieu van der Poel","Mattias Skjelmose","Michael Matthews","Ben Healy","Julian Alaphilippe","Kevin Vauquelin","Mauro Schmid","Quinten Hermans","Magnus Cort","Romain Gregoire","Marc Hirschi"],
   klatrer_break: ["Lenny Martinez","Thymen Arensman","Sergio Higuita","Einer Augusto Rubio","Lennert Van Eetvelt","Valentin Paret-Peintre","Ben O'Connor","Michael Storer","Jordan Jegat","Harold Tejada","Guillaume Martin","Egan Bernal","Derek Gee"],
@@ -891,6 +893,10 @@ function pointsEV(rider,stage,p,share){
   return 0;
 }
 
+/* --- udgåede ryttere + aktuelle trøjeholdere (opdateres med resultater) --- */
+const DNF_OUT=new Set(["Arnaud De Lie"]);   // udgik på E3
+const JERSEY_HOLDERS={gul:"Tadej Pogačar",prikker:"Alex Baudin",groen:null,ungdom:null};  // efter E3
+
 /* --- trøjedage: småt men dagligt (gul/hvid, grøn, prikker/angreb) --- */
 function jerseyEV(rider,stage){
   let ev=0;
@@ -898,6 +904,11 @@ function jerseyEV(rider,stage){
   const si=FAVS.sprint.indexOf(rider.n);
   if(stage.type==="flad"&&rider.role==="sprint"&&si>=0&&si<5) ev+=10000;
   if(stage.type==="bjerg"&&FAVS.klatrer_break.indexOf(rider.n)>=0) ev+=8000;
+  // aktuelle trøjeholdere: dagligt trøje-EV × sandsynlighed for at beholde trøjen
+  if(rider.n===JERSEY_HOLDERS.gul) ev+=TROJE.fører*0.7;
+  if(rider.n===JERSEY_HOLDERS.prikker) ev+=TROJE.bjerg*0.6;
+  if(rider.n===JERSEY_HOLDERS.groen) ev+=TROJE.point*0.7;
+  if(rider.n===JERSEY_HOLDERS.ungdom) ev+=TROJE.ungdom*0.7;
   return ev;
 }
 
@@ -914,6 +925,8 @@ function latePenaltyEV(rider,stage,p){
 }
 
 function expectedGrowth(rider, stage){
+  // Udgået af løbet: DNS koster -100.000 pr. resterende etape — sælg
+  if(DNF_OUT.has(rider.n)) return -100000;
   // Holdtid: alle på holdet får samme vækst — kun holdets styrke tæller
   if(stage.type==="tt_hold"){
     return Math.round((TTT_TIERS[rider.t] ?? TTT_DEFAULT)*190000);
@@ -1422,6 +1435,21 @@ function importPcsData(txt){
    ============================================================ */
 const RESULTS = {"Tadej Pogačar":[{"stage":1,"placering":3,"valueAfter":17100000}],"Jonas Vingegaard":[{"stage":1,"placering":1,"valueAfter":14225000}],"Remco Evenepoel":[{"stage":1,"placering":5,"valueAfter":10525000}],"Florian Lipowitz":[{"stage":1,"placering":5,"valueAfter":9525000}],"Isaac Del Toro":[{"stage":1,"placering":3,"valueAfter":9600000}],"Mads Pedersen":[{"stage":1,"placering":4,"valueAfter":9550000}],"Juan Ayuso":[{"stage":1,"placering":4,"valueAfter":9065000}],"Filippo Ganna":[{"stage":1,"placering":2,"valueAfter":8650000}],"Dorian Godon":[{"stage":1,"placering":2,"valueAfter":8150000}],"Mattias Skjelmose":[{"stage":1,"placering":4,"valueAfter":8050000}],"Derek Gee":[{"stage":1,"placering":4,"valueAfter":7550000}],"Jai Hindley":[{"stage":1,"placering":5,"valueAfter":7525000}],"Kevin Vauquelin":[{"stage":1,"placering":2,"valueAfter":7650000}],"Matteo Jorgenson":[{"stage":1,"placering":1,"valueAfter":7700000}],"Thymen Arensman":[{"stage":1,"placering":2,"valueAfter":7650000}],"Egan Bernal":[{"stage":1,"placering":2,"valueAfter":7150000}],"Joshua Tarling":[{"stage":1,"placering":2,"valueAfter":7150000}],"Maxim Van Gils":[{"stage":1,"placering":5,"valueAfter":6525000}],"Sepp Kuss":[{"stage":1,"placering":1,"valueAfter":6700000}],"Adam Yates":[{"stage":1,"placering":3,"valueAfter":6100000}],"Davide Piganzoli":[{"stage":1,"placering":1,"valueAfter":6200000}],"Brandon McNulty":[{"stage":1,"placering":3,"valueAfter":5600000}],"Bruno Armirail":[{"stage":1,"placering":1,"valueAfter":5200000}],"Quinn Simmons":[{"stage":1,"placering":4,"valueAfter":4550000}],"Tim Wellens":[{"stage":1,"placering":3,"valueAfter":4600000}],"Mathias Vacek":[{"stage":1,"placering":4,"valueAfter":4050000}],"Tobias Foss":[{"stage":1,"placering":2,"valueAfter":4150000}],"Victor Campenaerts":[{"stage":1,"placering":1,"valueAfter":4200000}],"Carlos Verona":[{"stage":1,"placering":4,"valueAfter":3550000}],"Edoardo Affini":[{"stage":1,"placering":1,"valueAfter":3700000}],"Felix Grossschartner":[{"stage":1,"placering":3,"valueAfter":3600000}],"Florian Vermeersch":[{"stage":1,"placering":3,"valueAfter":3600000}],"Jan Tratnik":[{"stage":1,"placering":5,"valueAfter":3525000}],"Mattia Cattaneo":[{"stage":1,"placering":5,"valueAfter":3525000}],"Michal Kwiatkowski":[{"stage":1,"placering":2,"valueAfter":3650000}],"Per Strand Hagenes":[{"stage":1,"placering":1,"valueAfter":3700000}],"Tim van Dijke":[{"stage":1,"placering":5,"valueAfter":3525000}],"Toms Skujins":[{"stage":1,"placering":4,"valueAfter":3550000}],"Nico Denz":[{"stage":1,"placering":5,"valueAfter":3025000}],"Nils Politt":[{"stage":1,"placering":3,"valueAfter":3100000}]};   // etape 1 (holdtid) indlejret; flere tilføjes løbende
 
+// Etape 2-3: kendte placeringer (kilde: cyclingnews/cyclingstage).
+// valueAfter kendes ikke fra spillet — kun placering (bruges i grafer/GC-logik).
+const RESULTS_MERGE={
+  2:{"Isaac Del Toro":1,"Tadej Pogačar":2,"Remco Evenepoel":3,"Jonas Vingegaard":4},
+  3:{"Tadej Pogačar":1,"Jonas Vingegaard":2,"Richard Carapaz":3,"Paul Seixas":4,
+     "Tobias Halland Johannessen":5,"Lennert Van Eetvelt":6,"Florian Lipowitz":7,
+     "Remco Evenepoel":8,"Isaac Del Toro":9,"Juan Ayuso":10,"Thomas Pidcock":11,
+     "Mattias Skjelmose":13,"Thymen Arensman":14,"Cian Uijtdebroeks":15}
+};
+for(const st in RESULTS_MERGE){
+  for(const n in RESULTS_MERGE[st]){
+    (RESULTS[n]=RESULTS[n]||[]).push({stage:+st,placering:RESULTS_MERGE[st][n]});
+  }
+}
+
 // estimeret placering: lavere = bedre. Afledt af EV-rang den dag (kun indikativ)
 function estPlacering(rider,stage){
   const ranked=RIDERS.map(r=>({n:r.n,ev:expectedGrowth(r,stage)})).sort((a,b)=>b.ev-a.ev);
@@ -1444,8 +1472,9 @@ const TYPE_COLOR={flad:"#6cb8e0",bakket:"#e8c558",bjerg:"#ef8c7c",tt_individuel:
 const TYPE_NAME={flad:"Flad",bakket:"Bakket",bjerg:"Bjerg",tt_individuel:"Enkeltstart",tt_hold:"Holdtid"};
 
 function valueChart(rider){
-  const series = (RESULTS[rider.n]&&RESULTS[rider.n].length)
-    ? [{stage:0,val:rider.v0||rider.v}].concat(RESULTS[rider.n].map(r=>({stage:r.stage,val:r.valueAfter})))
+  const withVal=(RESULTS[rider.n]||[]).filter(r=>r.valueAfter!=null);
+  const series = withVal.length
+    ? [{stage:0,val:rider.v0||rider.v}].concat(withVal.map(r=>({stage:r.stage,val:r.valueAfter})))
     : estValueSeries(rider);
   const W=680,H=190,pl=70,pr=14,pt=14,pb=26;
   const xs=series.map(s=>s.stage), ys=series.map(s=>s.val);
