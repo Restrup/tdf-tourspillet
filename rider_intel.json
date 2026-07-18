@@ -22,5 +22,20 @@
    "Quinn Simmons": {"boost": 1.35, "note": "cyclinguptodate nævner ham som oplagt udbrudskort på dagens terræn."},
    "Mads Pedersen": {"boost": 1.1, "note": "Bookmaker-favorit: kan overleve de to kat. 2-stigninger og spurte fra reduceret felt."}
   }
+ },
+ "13": {
+  "updated": "17. jul (morgen)",
+  "sources": ["Racing Post E13-preview", "ProCyclingUK E13-preview", "cyclinguptodate E13-preview", "Cyclingnews E13-preview"],
+  "riders": {
+   "Ben Healy": {"boost": 1.6, "note": "ProCyclingUK 5-stjernet: 'excels on long days when the race becomes difficult to organise' — går efter Tourens længste etape (205,8 km) fra udbrud; svaghed er den tekniske nedkørsel til Belfort."},
+   "Matej Mohoric": {"boost": 1.6, "note": "ProCyclingUK 5-stjernet: 'exceptional descender ... most suited to the final 30km' — den våde, tekniske nedkørsel fra Ballon d'Alsace er skræddersyet til ham."},
+   "Alex Baudin": {"boost": 1.5, "note": "cyclinguptodates editor's pick til 'solo win from the breakaway'; Racing Post each-way-tip 40-1. Ren klatrer der excellerer på kat. 1-Ballon d'Alsace."},
+   "Mathieu van der Poel": {"boost": 1.4, "note": "ProCyclingUK 4-stjernet: vandt E9 fra udbrud, 'ideally suited to a long, selective day'. Eneste bekymring: Ballon d'Alsace kan være for lang stigning."},
+   "Thomas Pidcock": {"boost": 1.35, "note": "Racing Posts 2pt-toptip @ 11-1 (Bet365): 'fearless descending skills' passer perfekt til den lange nedkørsel ind mod Belfort."},
+   "Marc Hirschi": {"boost": 1.35, "note": "ProCyclingUK forudser 3.-plads: 'best balance of climbing, descending and finishing speed' blandt udbrudsrytterne."},
+   "Richard Carapaz": {"boost": 1.3, "note": "Markedsleder @ 7-1 og cyclinguptodate-favorit; stærk klatrer der forventes at gå i det store udbrud på den svære dag."},
+   "Quinn Simmons": {"boost": 1.25, "note": "ProCyclingUK 3-stjernet: passer den lange indledning; Ballon d'Alsace 'close to his limit', men markedsnoteret @ 16-1."},
+   "Tadej Pogačar": {"boost": 0.8, "note": "Racing Post: GC-favoritterne 'save their legs for this weekend's mountainous climbs' → Pogačar ventes IKKE at gå efter etapen trods 12-1."}
+  }
  }
 }

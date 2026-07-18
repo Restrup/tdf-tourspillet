@@ -40,5 +40,20 @@
    {"name": "Romain Gregoire", "odds": [21.00]},
    {"name": "Magnus Cort", "odds": [21.00]}
   ]
+ },
+ "13": {
+  "bookies": ["Bet365", "Marked (presse)"],
+  "updated": "17. jul 07:30",
+  "riders": [
+   {"name": "Richard Carapaz", "odds": [8.00, 8.00]},
+   {"name": "Thomas Pidcock", "odds": [12.00, 15.00]},
+   {"name": "Tadej Pogačar", "odds": [13.00, 13.00]},
+   {"name": "Mathieu van der Poel", "odds": [13.00, 15.00]},
+   {"name": "Mads Pedersen", "odds": [17.00, null]},
+   {"name": "Quinn Simmons", "odds": [null, 17.00]},
+   {"name": "Tim Wellens", "odds": [null, 17.00]},
+   {"name": "Ben Healy", "odds": [23.00, null]},
+   {"name": "Alex Baudin", "odds": [41.00, null]}
+  ]
  }
 }
