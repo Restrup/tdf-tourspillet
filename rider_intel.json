@@ -37,5 +37,20 @@
    "Quinn Simmons": {"boost": 1.25, "note": "ProCyclingUK 3-stjernet: passer den lange indledning; Ballon d'Alsace 'close to his limit', men markedsnoteret @ 16-1."},
    "Tadej Pogačar": {"boost": 0.8, "note": "Racing Post: GC-favoritterne 'save their legs for this weekend's mountainous climbs' → Pogačar ventes IKKE at gå efter etapen trods 12-1."}
   }
+ },
+ "14": {
+  "updated": "18. jul (morgen)",
+  "sources": ["cyclinguptodate E14-preview", "idlprocycling E14-preview", "Cyclingnews E14-preview", "pouletips E14"],
+  "riders": {
+   "Tadej Pogačar": {"boost": 1.6, "note": "cyclinguptodate ★★★ + idlprocycling + escapecollective editor's pick til 'solo victory': 'the man to beat'. Den stejle, uregelmæssige Col du Haag (11,2 km/7,3 %, ramper til 15 %) er ideel angrebsplatform; UAE styrer løbet. Fører GC +3.36."},
+   "Richard Carapaz": {"boost": 1.5, "note": "★★ hos både cyclinguptodate og idlprocycling: bedste rene klatrer i udbruddet med solosejr-potentiale hvis flugten når mål før GC-mændene."},
+   "Isaac Del Toro": {"boost": 1.3, "note": "idlprocycling dark horse; UAE's puncheur-klatrer i storform — kan sendes i udbrud hvis Pogačar er dækket."},
+   "Tobias Halland Johannessen": {"boost": 1.3, "note": "idlprocycling + cyclinguptodate: udbrudsklatrer 'who have already shown their form'; Uno-X' stærkeste klatrekort."},
+   "Thymen Arensman": {"boost": 1.25, "note": "idlprocycling udbrudsklatrer 'already shown their form'; ★ hos cyclinguptodate hvis formen er der."},
+   "Valentin Paret-Peintre": {"boost": 1.25, "note": "★ udbrudsklatrer (cyclinguptodate) og navngivet af idlprocycling blandt de formstærke klatrere."},
+   "Remco Evenepoel": {"boost": 1.2, "note": "cyclinguptodate: 'uphill finale favours his style'; noteret som favorit på profilen (pouletips). 3'er i GC."},
+   "Alex Baudin": {"boost": 1.2, "note": "★ udbrudsklatrer (cyclinguptodate); ugens gennemgående udbrudstrussel og prikketrøje-kandidat."},
+   "Jonas Vingegaard": {"boost": 1.1, "note": "★★ tester klatrebenene, men bedre i høje bjerge — Col du Haags korte, eksplosive karakter kan begrænse tidsgevinst ('ventes at tabe ~30s', cyclinguptodate)."}
+  }
  }
 }
